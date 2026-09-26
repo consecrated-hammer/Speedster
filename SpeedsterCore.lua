@@ -32,7 +32,6 @@ local utilityActions = {
 }
 local db
 local speedButton
-local minimapButton
 local floatingButton
 local utilityButtons = {}
 local pendingRefresh
@@ -51,14 +50,14 @@ local function cancelShapeshiftForTaxi()
 		local ok, err = pcall(CancelShapeshiftForm)
 		if not ok and not warnedTaxiCancelFailure then
 			warnedTaxiCancelFailure = true
-			print(("Speedster: taxi auto-cancel failed (%s)."):format(tostring(err)))
+			ns.HammerCore.Print(("taxi auto-cancel failed (%s)."):format(tostring(err)))
 		end
 	end
 	if CancelForm then
 		local ok, err = pcall(CancelForm)
 		if not ok and not warnedTaxiCancelFailure then
 			warnedTaxiCancelFailure = true
-			print(("Speedster: taxi auto-cancel failed (%s)."):format(tostring(err)))
+			ns.HammerCore.Print(("taxi auto-cancel failed (%s)."):format(tostring(err)))
 		end
 	end
 end
@@ -353,101 +352,6 @@ function ns.resetFloatingButtonPosition()
 	return true
 end
 
-local function createMinimapButton()
-	minimapButton = CreateFrame("Button", addon.."MinimapButton", Minimap)
-	minimapButton:SetSize(31, 31)
-	minimapButton:SetFrameStrata("MEDIUM")
-	minimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
-	minimapButton:GetHighlightTexture():SetBlendMode("ADD")
-
-	local bg = minimapButton:CreateTexture(nil, "BACKGROUND")
-	bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
-	bg:SetAllPoints()
-
-	local icon = minimapButton:CreateTexture(nil, "ARTWORK")
-	icon:SetPoint("TOPLEFT", minimapButton, "TOPLEFT", 7, -7)
-	icon:SetPoint("BOTTOMRIGHT", minimapButton, "BOTTOMRIGHT", -7, 7)
-	icon:SetTexture(ICON_PATH)
-	if not icon:GetTexture() then
-		icon:SetTexture(FALLBACK_ICON_PATH)
-	end
-	icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-	minimapButton.icon = icon
-
-	local border = minimapButton:CreateTexture(nil, "OVERLAY")
-	border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
-	border:SetSize(54, 54)
-	border:SetPoint("TOPLEFT")
-
-	local function orbitRadius()
-		local width = Minimap:GetWidth() or 0
-		local height = Minimap:GetHeight() or 0
-		local diameter = math.min(width, height)
-		if diameter <= 0 then return 80 end
-		-- Match Salve's outside-edge orbit at any minimap size or UI scale.
-		return diameter / 2 + minimapButton:GetWidth() / 2 - 10
-	end
-
-	local function setMinimapButtonPosition(angle)
-		local radians = math.rad(angle or 225)
-		local radius = orbitRadius()
-		local x = math.cos(radians) * radius
-		local y = math.sin(radians) * radius
-		minimapButton:ClearAllPoints()
-		minimapButton:SetPoint("CENTER", Minimap, "CENTER", x, y)
-	end
-
-	local function updateMinimapButtonFromCursor()
-		local scale = Minimap:GetEffectiveScale()
-		local cursorX, cursorY = GetCursorPosition()
-		cursorX = cursorX / scale
-		cursorY = cursorY / scale
-		local centerX, centerY = Minimap:GetCenter()
-		if not centerX or not centerY then return end
-
-		local atan2 = math.atan2 or math.atan
-		local angle = math.deg(atan2(cursorY - centerY, cursorX - centerX))
-		db.minimap_angle = angle
-		setMinimapButtonPosition(angle)
-	end
-
-	minimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-	minimapButton:RegisterForDrag("LeftButton")
-	minimapButton:SetScript("OnDragStart", function(self)
-		self._dragging = true
-		self:SetScript("OnUpdate", updateMinimapButtonFromCursor)
-	end)
-	minimapButton:SetScript("OnDragStop", function(self)
-		self:SetScript("OnUpdate", nil)
-		self._dragging = nil
-		self._wasDragged = true
-	end)
-	minimapButton:SetScript("OnClick", function(_, button)
-		if minimapButton._wasDragged then
-			minimapButton._wasDragged = nil
-			return
-		end
-		if button == "LeftButton" or button == "RightButton" then
-			ns.openOptions()
-		end
-	end)
-	minimapButton:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-		GameTooltip:SetText("Speedster")
-		GameTooltip:AddLine("Click: open options", 0.85, 0.85, 0.85)
-		GameTooltip:AddLine("Drag: move minimap icon", 0.85, 0.85, 0.85)
-		GameTooltip:Show()
-	end)
-	minimapButton:SetScript("OnLeave", function()
-		GameTooltip:Hide()
-	end)
-
-	setMinimapButtonPosition(db.minimap_angle or 225)
-	Minimap:HookScript("OnSizeChanged", function()
-		setMinimapButtonPosition(db.minimap_angle or 225)
-	end)
-end
-
 local function createFloatingButton()
 	floatingButton = CreateFrame("Button", addon.."FloatingButton", UIParent, "ActionButtonTemplate, SecureActionButtonTemplate, SecureHandlerBaseTemplate")
 	floatingButton:SetSize(FLOATING_BUTTON_SIZE, FLOATING_BUTTON_SIZE)
@@ -532,16 +436,6 @@ function ns.refreshSpeedButton()
 		floatingButton:SetAttribute("macrotext", macroText)
 		floatingButton:SetShown(not not db.show_floating_button)
 	end
-	if minimapButton then
-		-- MinimapButtonBag and similar collectors hook Show/Hide to keep their
-		-- managed buttons collapsed. SetShown bypasses those hooks and would
-		-- let a routine macro refresh restore this icon onto the minimap.
-		if db.show_minimap_button then
-			minimapButton:Show()
-		else
-			minimapButton:Hide()
-		end
-	end
 	if ns.refreshOptions then
 		ns.refreshOptions()
 	end
@@ -575,7 +469,7 @@ function ns.bindActionKey(command, keyText)
 	local oldAction = GetBindingAction(key)
 	local oldKey = GetBindingKey(command)
 	if oldAction ~= "" and oldAction ~= command then
-		print(("Speedster: '%s' replaced previous binding '%s'."):format(key, GetBindingName(oldAction) or oldAction))
+		ns.HammerCore.Print(("'%s' replaced previous binding '%s'."):format(key, GetBindingName(oldAction) or oldAction))
 	end
 
 	if not SetBinding(key, command) then
@@ -597,56 +491,8 @@ function ns.bindKey(keyText)
 	return ns.bindActionKey(bindingCommand, keyText)
 end
 
-function ns.openOptions()
-	if ns.showOptions then
-		ns.showOptions()
-	else
-		print("Speedster: options are not ready yet.")
-	end
-end
-
-SLASH_SPEEDSTER1 = "/speedster"
-SlashCmdList["SPEEDSTER"] = function(message)
-	local command = (message or ""):lower():match("^%s*(.-)%s*$")
-	if command == "debug" or command == "diagnostics" then
-		if ns.ShowDiagnosticReport then ns.ShowDiagnosticReport()
-		else print("Speedster: diagnostics are not ready yet.") end
-	else
-		ns.openOptions()
-	end
-end
-
-SLASH_SPEEDSTER_LOADMSG1 = "/speedsterloadmsg"
-SlashCmdList["SPEEDSTER_LOADMSG"] = function(msg)
-	msg = (msg or ""):lower():match("^%s*(.-)%s*$")
-	if msg == "on" or msg == "off" then
-		db.show_startup_message = msg == "on"
-		print("Speedster: load message " .. (db.show_startup_message and "enabled." or "disabled."))
-	else
-		print("Speedster: use /speedsterloadmsg on or off.")
-	end
-end
-
-SLASH_SPEEDSTER_BIND1 = "/speedsterbind"
-SlashCmdList["SPEEDSTER_BIND"] = function(msg)
-	local ok, result = ns.bindKey(msg)
-	if ok then
-		print(("Speedster: bound speed macro to %s."):format(GetBindingText(result, "KEY_") or result))
-	else
-		print(("Speedster: %s"):format(result))
-	end
-end
-
-SLASH_SPEEDSTER_MACRO1 = "/speedstermacro"
-SlashCmdList["SPEEDSTER_MACRO"] = function()
-	local macro = buildMacro()
-	if macro == "" then
-		print("Speedster: no speed macro available for current class/level.")
-	else
-		print("Speedster macro:")
-		print(macro)
-	end
-end
+-- Settings, commands, chat, the minimap button and the startup message come
+-- from HammerCore (Libs/HammerCore); see Setup.lua.
 
 core:SetScript("OnEvent", function(_, event, ...)
 	if event == "ADDON_LOADED" then
@@ -662,26 +508,17 @@ core:SetScript("OnEvent", function(_, event, ...)
 			enabled = true,
 			druid_use_travel = true,
 			shaman_use_ghost_wolf = true,
-			show_minimap_button = true,
 			show_floating_button = true,
 			cancel_form_on_taxi = true,
-			show_startup_message = true,
 		}
 		db = SpeedsterDB
 		ns.db = db
-		if db.show_minimap_button == nil then
-			db.show_minimap_button = true
-		end
 		if db.show_floating_button == nil then
 			db.show_floating_button = true
-		end
-		if db.minimap_angle == nil then
-			db.minimap_angle = 225
 		end
 		if db.cancel_form_on_taxi == nil then
 			db.cancel_form_on_taxi = true
 		end
-		if db.show_startup_message == nil then db.show_startup_message = true end
 		if camelotPreview then db.cancel_form_on_taxi = false end
 		if db.shaman_use_ghost_wolf == nil then
 			db.shaman_use_ghost_wolf = true
@@ -701,11 +538,8 @@ core:SetScript("OnEvent", function(_, event, ...)
 			utilityButtons[spec.id] = utilityButton
 			_G["BINDING_NAME_CLICK "..buttonName.."_"..spec.id..":LeftButton"] = spec.label
 		end
-		createMinimapButton()
 		createFloatingButton()
-		if db.show_startup_message then
-			print("Speedster: loaded — type /speedster for settings.")
-		end
+		ns.HammerCore:Start()
 
 		_G["BINDING_HEADER_SPEEDSTER"] = "Speedster"
 		_G["BINDING_NAME_"..bindingCommand] = "Use speed macro"

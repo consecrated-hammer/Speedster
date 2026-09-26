@@ -12,6 +12,8 @@
 
 # This build uses Speedster's existing protected-button and combat-deferral
 # implementation.
+Libs\HammerCore\HammerCore.xml
 SpeedsterCore.lua
+Setup.lua
 SpeedsterDiagnostics.lua
 SpeedsterOptions.lua

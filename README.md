@@ -42,17 +42,31 @@ If your class has no supported speed spell available yet, the generated macro wi
 
 ## Usage
 
-1. Open options:
-   - `/speedster`
-2. Bind a key:
-	   - Click **Bind Key**, then press the key/button you want.
-	   - Use the separate **Bind Key** control beside any learned additional action.
-   - Or use `/speedsterbind [KEY]` (empty value defaults to `NUMPADMINUS`).
-3. Inspect generated macro text:
-   - `/speedstermacro`
+1. Open settings with `/speedster`.
+2. Bind a key on the **Key Bindings** page: click **Bind key**, then press the
+   key or button you want. Learned additional actions have their own
+   **Bind key**. Or type `/speedster bind [KEY]` (blank means `NUMPADMINUS`).
+3. See the generated macro on **Key Bindings**, or with `/speedster macro`.
 
 ## Commands
 
-- `/speedster` - Open Speedster options
-- `/speedsterbind [KEY]` - Bind speed macro to a key
-- `/speedstermacro` - Print current generated macro
+| Command | Effect |
+| --- | --- |
+| `/speedster` | Open settings |
+| `/speedster help` | List every command |
+| `/speedster version` | Print the loaded version and client |
+| `/speedster about` | Open the About page |
+| `/speedster debug` | Open a copyable diagnostic report |
+| `/speedster startup [on\|off]` | Show the startup message |
+| `/speedster minimap [on\|off]` | Show the minimap button |
+| `/speedster theme [modern\|classic]` | Choose the settings theme |
+| `/speedster reset position` | Move the floating button back |
+| `/speedster reset settings` | Reset every setting after a confirmation |
+| `/speedster toggle` | Show or hide the floating button |
+| `/speedster bind [KEY]` | Bind the speed macro |
+| `/speedster macro` | Print the current speed macro |
+| `/speedster quiz` | Take a five-question lore quiz |
+
+Settings, commands, the minimap button and the reference pages come from
+[HammerCore](https://github.com/consecrated-hammer/HammerCore), shared by
+every Consecrated Hammer addon and vendored under `Libs/HammerCore`.

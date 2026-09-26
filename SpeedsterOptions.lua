@@ -1,556 +1,239 @@
 local addon, ns = ...
+local HC = ns.HammerCore
+local UI, T = HC.UI, HC.Theme
 
-local panel = CreateFrame("Frame", addon.."OptionsPanel")
-panel.name = "Speedster"
+-- Speedster's own settings pages on HammerCore's window: Speed, Key
+-- Bindings, and the floating button on Visibility.  HammerCore adds the
+-- minimap button, startup message, Theme, Commands, Troubleshooting and About.
 
-local categoryID
-local waitingForBind = false
-local bindTargetCommand
-local bindTargetLabel
+-- ── Key capture ────────────────────────────────────────────────────────────
+-- One capture frame over the settings window takes the next key, mouse
+-- button or wheel turn and binds it to the waiting command.  Escape cancels.
+
+local capture = { active = false }
 
 local function normalizeBindingKey(key)
 	if key == "LeftButton" then key = "BUTTON1" end
 	if key == "RightButton" then key = "BUTTON2" end
 	if key == "MiddleButton" then key = "BUTTON3" end
-
-	if GetConvertedKeyOrButton then
-		key = GetConvertedKeyOrButton(key)
-	end
-	if not key or key == "" then
-		return
-	end
-
-	if IsKeyPressIgnoredForBinding and IsKeyPressIgnoredForBinding(key) then
-		return
-	end
-
-	if CreateKeyChordStringUsingMetaKeyState then
-		return CreateKeyChordStringUsingMetaKeyState(key)
-	end
-
+	if GetConvertedKeyOrButton then key = GetConvertedKeyOrButton(key) end
+	if not key or key == "" then return end
+	if IsKeyPressIgnoredForBinding and IsKeyPressIgnoredForBinding(key) then return end
+	if CreateKeyChordStringUsingMetaKeyState then return CreateKeyChordStringUsingMetaKeyState(key) end
 	local parts = {}
-	if IsControlKeyDown and IsControlKeyDown() then
-		parts[#parts + 1] = "CTRL"
-	end
-	if IsAltKeyDown and IsAltKeyDown() then
-		parts[#parts + 1] = "ALT"
-	end
-	if IsShiftKeyDown and IsShiftKeyDown() then
-		parts[#parts + 1] = "SHIFT"
-	end
+	if IsControlKeyDown and IsControlKeyDown() then parts[#parts + 1] = "CTRL" end
+	if IsAltKeyDown and IsAltKeyDown() then parts[#parts + 1] = "ALT" end
+	if IsShiftKeyDown and IsShiftKeyDown() then parts[#parts + 1] = "SHIFT" end
 	parts[#parts + 1] = key
 	return table.concat(parts, "-")
 end
 
-local function stopBindCapture()
-	waitingForBind = false
-	if panel.bindButton then panel.bindButton:SetText("Bind Key") end
-	if panel._activeBindButton and panel._activeBindButton ~= panel.bindButton then
-		panel._activeBindButton:SetText("Bind Key")
-	end
-	panel._activeBindButton = nil
-	bindTargetCommand = nil
-	bindTargetLabel = nil
-	panel.bindCapture:Hide()
-	panel.bindCapture:EnableKeyboard(false)
-	panel.bindCapture:EnableMouse(false)
-	if panel.bindCapture.SetPropagateKeyboardInput then
-		panel.bindCapture:SetPropagateKeyboardInput(true)
-	end
-	if panel.bindCapture.SetPropagateMouseClicks then
-		panel.bindCapture:SetPropagateMouseClicks(true)
-	end
-	if panel.bindCapture.SetPropagateMouseMotion then
-		panel.bindCapture:SetPropagateMouseMotion(true)
+local function setPropagation(frame, propagate)
+	if frame.SetPropagateKeyboardInput then frame:SetPropagateKeyboardInput(propagate) end
+	if frame.SetPropagateMouseClicks then frame:SetPropagateMouseClicks(propagate) end
+	if frame.SetPropagateMouseMotion then frame:SetPropagateMouseMotion(propagate) end
+end
+
+local function stopCapture()
+	capture.active = false
+	if capture.button then capture.button:SetText("Bind key") end
+	capture.button, capture.command, capture.label = nil, nil, nil
+	if capture.frame then
+		capture.frame:Hide()
+		capture.frame:EnableKeyboard(false)
+		capture.frame:EnableMouse(false)
+		setPropagation(capture.frame, true)
 	end
 end
 
-local function tryBindCapturedKey(rawKey)
+local function captureKey(rawKey)
 	if rawKey == "ESCAPE" then
-		stopBindCapture()
-		print("Speedster: key binding canceled.")
+		stopCapture()
+		HC.Print("key binding cancelled")
 		return
 	end
-
-	local bindKey = normalizeBindingKey(rawKey)
-	if not bindKey then
-		return
-	end
-
-	local command = bindTargetCommand
-	local label = bindTargetLabel or "action"
-	local ok, result = ns.bindActionKey(command, bindKey)
+	local key = normalizeBindingKey(rawKey)
+	if not key then return end
+	local ok, result = ns.bindActionKey(capture.command, key)
 	if ok then
-		print(("Speedster: bound %s to %s."):format(label, GetBindingText(result, "KEY_") or result))
+		HC.Print(("bound %s to %s"):format(capture.label or "action", GetBindingText(result, "KEY_") or result))
 	else
-		print(("Speedster: %s"):format(result))
+		HC.Print(result)
 	end
-	stopBindCapture()
-	if ns.refreshOptions then
-		ns.refreshOptions()
-	end
+	stopCapture()
+	if ns.refreshOptions then ns.refreshOptions() end
 end
 
-local function startBindCapture(button, command, label)
-	if waitingForBind then
-		stopBindCapture()
-	end
-	waitingForBind = true
-	bindTargetCommand = command
-	bindTargetLabel = label
-	panel._activeBindButton = button
-	button:SetText("Press a key... (Esc to cancel)")
-	panel.bindCapture:Show()
-	panel.bindCapture:EnableKeyboard(true)
-	panel.bindCapture:EnableMouse(true)
-	if panel.bindCapture.SetPropagateKeyboardInput then
-		panel.bindCapture:SetPropagateKeyboardInput(false)
-	end
-	if panel.bindCapture.SetPropagateMouseClicks then
-		panel.bindCapture:SetPropagateMouseClicks(false)
-	end
-	if panel.bindCapture.SetPropagateMouseMotion then
-		panel.bindCapture:SetPropagateMouseMotion(false)
-	end
+local function ensureCaptureFrame()
+	if capture.frame then return capture.frame end
+	local owner = HC.Settings.window or UIParent
+	local frame = CreateFrame("Frame", nil, owner)
+	frame:SetAllPoints(owner)
+	frame:SetFrameStrata("FULLSCREEN_DIALOG")
+	frame:EnableMouseWheel(true)
+	frame:SetScript("OnKeyDown", function(_, key) captureKey(key) end)
+	frame:SetScript("OnMouseDown", function(_, button) captureKey(button) end)
+	frame:SetScript("OnMouseWheel", function(_, delta) captureKey(delta > 0 and "MOUSEWHEELUP" or "MOUSEWHEELDOWN") end)
+	frame:SetScript("OnHide", function() if capture.active then stopCapture() end end)
+	frame:Hide()
+	capture.frame = frame
+	return frame
 end
 
-local function createCheckButton(parent)
-	local ok, btn = pcall(CreateFrame, "CheckButton", nil, parent, "InterfaceOptionsCheckButtonTemplate")
-	if not ok or not btn then
-		btn = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-	end
-	if not btn.Text then
-		btn.Text = btn:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-		btn.Text:SetPoint("LEFT", btn, "RIGHT", 2, 1)
-	end
-	return btn
+local function startCapture(button, command, label)
+	if capture.active then stopCapture() end
+	local frame = ensureCaptureFrame()
+	capture.active, capture.button, capture.command, capture.label = true, button, command, label
+	button:SetText("Press a key (Esc cancels)")
+	frame:Show()
+	frame:EnableKeyboard(true)
+	frame:EnableMouse(true)
+	setPropagation(frame, false)
+end
+ns.StopBindCapture = stopCapture
+
+-- Settings re-read their values when anything outside them changes.
+function ns.refreshOptions()
+	local settings = HC.Settings
+	if settings:IsShown() then settings:Select(settings.selected) end
 end
 
-local function hookHintTooltip(control)
-	local function showHint(owner)
-		if not control._speedsterHint then return end
-		GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
-		GameTooltip:SetText(control._speedsterHint, 1, 1, 1, 1, true)
-		GameTooltip:Show()
-	end
-	local function hideHint(owner)
-		if GameTooltip and GameTooltip:IsOwned(owner) then
-			GameTooltip:Hide()
-		end
-	end
+-- ── Speed ──────────────────────────────────────────────────────────────────
 
-	control:HookScript("OnEnter", function(self)
-		showHint(self)
-	end)
-	control:HookScript("OnLeave", function(self)
-		hideHint(self)
-	end)
-
-	if not control._speedsterHintHotspot then
-		local hotspot = CreateFrame("Frame", nil, control)
-		hotspot:ClearAllPoints()
-		hotspot:SetPoint("TOPLEFT", control, "TOPLEFT", 0, 0)
-		if control.Text then
-			hotspot:SetPoint("BOTTOMRIGHT", control.Text, "BOTTOMRIGHT", 2, 0)
-		else
-			hotspot:SetPoint("BOTTOMRIGHT", control, "BOTTOMRIGHT", 0, 0)
-		end
-		hotspot:EnableMouse(false)
-		hotspot:Hide()
-		hotspot:SetFrameLevel(control:GetFrameLevel() + 10)
-		hotspot:SetScript("OnEnter", function(self)
-			showHint(self)
-		end)
-		hotspot:SetScript("OnLeave", function(self)
-			hideHint(self)
-		end)
-		control._speedsterHintHotspot = hotspot
-	end
-end
-
-local function updateHintTooltipState(control)
-	if not control or not control._speedsterHintHotspot then return end
-	local active = control:IsShown() and (not control:IsEnabled()) and (type(control._speedsterHint) == "string") and control._speedsterHint ~= ""
-	control._speedsterHintHotspot:SetShown(active)
-	control._speedsterHintHotspot:EnableMouse(active)
-	if not active and GameTooltip and GameTooltip:IsOwned(control._speedsterHintHotspot) then
-		GameTooltip:Hide()
-	end
-end
-
-local function createSectionHeader(parent, text, anchorFrame, offsetY)
-	local header = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	header:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, offsetY or -16)
-	header:SetText(text)
-	return header
-end
-
-local function positionSectionHeader(header, anchorFrame, offsetY)
-	header:ClearAllPoints()
-	header:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, offsetY or -16)
-end
-
-local function refreshPanel()
-	if not panel._built then return end
-	if not SpeedsterDB then return end
-
-	panel.enable:SetChecked(not not SpeedsterDB.enabled)
-	panel.showMinimapButton:SetChecked(not not SpeedsterDB.show_minimap_button)
-	panel.showFloatingButton:SetChecked(not not SpeedsterDB.show_floating_button)
-	panel.druidTravel:SetChecked(not not SpeedsterDB.druid_use_travel)
-	panel.shamanGhostWolf:SetChecked(not not SpeedsterDB.shaman_use_ghost_wolf)
-	panel.cancelFormOnTaxi:SetChecked(not not SpeedsterDB.cancel_form_on_taxi)
+HC.Settings:NewPage({ name = "Speed", description = "One key for the fastest way to move." }, function(panel, y)
+	local db = function() return ns.db end
+	_, y = UI.Header(panel, "Speed macro", y)
+	_, y = UI.Check(panel, "Enable speed macro", "Build and bind the speed macro.", y,
+		function() return db().enabled end,
+		function(value) db().enabled = value; ns.refreshSpeedButton() end)
 
 	local _, classFile = UnitClass("player")
-	local isDruid = classFile == "DRUID"
-	local isShaman = classFile == "SHAMAN"
-	local showClassSection = isDruid or isShaman
-
-	if showClassSection then
-		panel.classHeader:Show()
-	else
-		panel.classHeader:Hide()
-	end
-	if isDruid then
-		panel.druidTravel:Show()
-	else
-		panel.druidTravel:Hide()
-	end
-	if isShaman then
-		panel.shamanGhostWolf:Show()
-	else
-		panel.shamanGhostWolf:Hide()
-	end
-
-	local behaviorAnchor = panel.enable
-	if showClassSection then
-		if isDruid then
-			local hasTravelOption = ns.isSpellKnownSafe(783) or ns.isSpellKnownSafe(33943) or ns.isSpellKnownSafe(40120)
-			panel.druidTravel:SetEnabled(hasTravelOption)
-			panel.druidTravel._speedsterHint = hasTravelOption and nil or "Unlocks after learning Travel Form."
-			panel.shamanGhostWolf:SetEnabled(false)
-			panel.shamanGhostWolf._speedsterHint = nil
-			behaviorAnchor = panel.druidTravel
-		elseif isShaman then
-			local hasGhostWolf = ns.isSpellKnownSafe(2645)
-			panel.shamanGhostWolf:SetEnabled(hasGhostWolf)
-			panel.shamanGhostWolf._speedsterHint = hasGhostWolf and nil or "Unlocks after learning Ghost Wolf."
-			panel.druidTravel:SetEnabled(false)
-			panel.druidTravel._speedsterHint = nil
-			behaviorAnchor = panel.shamanGhostWolf
-		end
-	else
-		panel.druidTravel:SetEnabled(false)
-		panel.shamanGhostWolf:SetEnabled(false)
-		panel.druidTravel._speedsterHint = nil
-		panel.shamanGhostWolf._speedsterHint = nil
-	end
-	updateHintTooltipState(panel.druidTravel)
-	updateHintTooltipState(panel.shamanGhostWolf)
-
-	positionSectionHeader(panel.behaviorHeader, behaviorAnchor, -14)
-
-	if ns.getBindingText then
-		panel.bindText:SetText("Current keybind: "..ns.getBindingText())
-	end
-
-	local actions = ns.getUtilityActions and ns.getUtilityActions() or {}
-	local visible = 0
-	for _, row in ipairs(panel.utilityRows or {}) do
-		row:Hide()
-	end
-	for _, action in ipairs(actions) do
-		local row = panel.utilityRowsByID[action.id]
-		if row then
-			visible = visible + 1
-			row:ClearAllPoints()
-			row:SetPoint("TOPLEFT", panel.utilityHeader, "BOTTOMLEFT", 0, -8 - ((visible - 1) * 48))
-			row.label:SetText(action.label)
-			row.keyText:SetText("Key: "..ns.getActionBindingText(action.bindingCommand))
-			row.warning:SetText(action.warning or "")
-			row.bindCommand = action.bindingCommand
-			row.bindLabel = action.label
-			row:Show()
+	if classFile == "DRUID" or classFile == "SHAMAN" then
+		_, y = UI.Header(panel, "Class", y)
+		local row
+		if classFile == "DRUID" then
+			row, y = UI.Check(panel, "Use Travel Form outdoors", "Unlocks after learning Travel Form.", y,
+				function() return db().druid_use_travel end,
+				function(value) db().druid_use_travel = value; ns.refreshSpeedButton() end)
+			UI.OnRefresh(panel, function()
+				UI.SetEnabled(row.hcCheckbox, ns.isSpellKnownSafe(783) or ns.isSpellKnownSafe(33943) or ns.isSpellKnownSafe(40120))
+			end)
+		else
+			row, y = UI.Check(panel, "Use Ghost Wolf", "Unlocks after learning Ghost Wolf.", y,
+				function() return db().shaman_use_ghost_wolf end,
+				function(value) db().shaman_use_ghost_wolf = value; ns.refreshSpeedButton() end)
+			UI.OnRefresh(panel, function() UI.SetEnabled(row.hcCheckbox, ns.isSpellKnownSafe(2645)) end)
 		end
 	end
-	panel.utilityHeader:Show()
-	if visible == 0 then
-		panel.utilityNone:Show()
-	else
-		panel.utilityNone:Hide()
-	end
 
-	if ns.getMacro then
-		local macro = ns.getMacro()
-		if macro == "" then
-			macro = "(No speed macro available yet for this class/level)"
-		end
-		panel.macroValue:SetText(macro)
-	end
-end
-ns.refreshOptions = refreshPanel
-
-local function ensureBuilt()
-	if panel._built then return end
-	panel._built = true
-
-	-- Header
-	local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-	title:SetPoint("TOPLEFT", 16, -16)
-	title:SetText("Speedster")
-
-	panel.logo = panel:CreateTexture(nil, "ARTWORK")
-	panel.logo:SetSize(64, 64)
-	panel.logo:SetPoint("TOPRIGHT", -20, -12)
-	panel.logo:SetTexture("Interface\\AddOns\\Speedster\\textures\\Speedster")
-
-	local subtitle = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-	subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-	subtitle:SetPoint("RIGHT", panel.logo, "LEFT", -10, 0)
-	subtitle:SetJustifyH("LEFT")
-	subtitle:SetText("Simple speed macro helper.")
-
-	-- Section: General
-	panel.generalHeader = createSectionHeader(panel, "General", subtitle, -20)
-
-	panel.enable = createCheckButton(panel)
-	panel.enable:SetPoint("TOPLEFT", panel.generalHeader, "BOTTOMLEFT", -2, -4)
-	panel.enable.Text:SetText("Enable speed macro")
-	panel.enable:SetScript("OnClick", function(btn)
-		SpeedsterDB.enabled = btn:GetChecked() and true or false
-		ns.refreshSpeedButton()
-	end)
-
-	-- Section: Class
-	panel.classHeader = createSectionHeader(panel, "Class", panel.enable, -14)
-
-	panel.druidTravel = createCheckButton(panel)
-	panel.druidTravel:SetPoint("TOPLEFT", panel.classHeader, "BOTTOMLEFT", -2, -4)
-	panel.druidTravel.Text:SetText("Druid: use Travel Form outdoors when known")
-	panel.druidTravel:SetScript("OnClick", function(btn)
-		SpeedsterDB.druid_use_travel = btn:GetChecked() and true or false
-		ns.refreshSpeedButton()
-	end)
-	hookHintTooltip(panel.druidTravel)
-
-	panel.shamanGhostWolf = createCheckButton(panel)
-	panel.shamanGhostWolf:SetPoint("TOPLEFT", panel.classHeader, "BOTTOMLEFT", -2, -4)
-	panel.shamanGhostWolf.Text:SetText("Shaman: use Ghost Wolf when known")
-	panel.shamanGhostWolf:SetScript("OnClick", function(btn)
-		SpeedsterDB.shaman_use_ghost_wolf = btn:GetChecked() and true or false
-		ns.refreshSpeedButton()
-	end)
-	hookHintTooltip(panel.shamanGhostWolf)
-
-	-- Section: Behavior
-	panel.behaviorHeader = createSectionHeader(panel, "Behavior", panel.druidTravel, -14)
-
-	panel.cancelFormOnTaxi = createCheckButton(panel)
-	panel.cancelFormOnTaxi:SetPoint("TOPLEFT", panel.behaviorHeader, "BOTTOMLEFT", -2, -4)
-	panel.cancelFormOnTaxi.Text:SetText("Auto-cancel shapeshift form when using a flight master")
-	panel.cancelFormOnTaxi:SetScript("OnClick", function(btn)
-		if ns.camelotPreview then
-		btn:SetChecked(false)
-		return
-		end
-		SpeedsterDB.cancel_form_on_taxi = btn:GetChecked() and true or false
-	end)
-	if ns.camelotPreview then
-		panel.cancelFormOnTaxi:SetChecked(false)
-		panel.cancelFormOnTaxi:SetEnabled(false)
-		panel.cancelFormOnTaxi.Text:SetText("Auto-cancel shapeshift form when using a flight master (unavailable in Forever)")
-	end
-
-	-- Section: Buttons
-	panel.buttonsHeader = createSectionHeader(panel, "Buttons", panel.cancelFormOnTaxi, -14)
-
-	panel.showMinimapButton = createCheckButton(panel)
-	panel.showMinimapButton:SetPoint("TOPLEFT", panel.buttonsHeader, "BOTTOMLEFT", -2, -4)
-	panel.showMinimapButton.Text:SetText("Show minimap button")
-	panel.showMinimapButton:SetScript("OnClick", function(btn)
-		SpeedsterDB.show_minimap_button = btn:GetChecked() and true or false
-		ns.refreshSpeedButton()
-	end)
-
-	panel.showFloatingButton = createCheckButton(panel)
-	panel.showFloatingButton:SetPoint("TOPLEFT", panel.showMinimapButton, "BOTTOMLEFT", 0, -4)
-	panel.showFloatingButton.Text:SetText("Show floating on-screen button")
-	panel.showFloatingButton:SetScript("OnClick", function(btn)
-		SpeedsterDB.show_floating_button = btn:GetChecked() and true or false
-		ns.refreshSpeedButton()
-	end)
-
-	panel.resetFloatingPosButton = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-	panel.resetFloatingPosButton:SetSize(220, 22)
-	panel.resetFloatingPosButton:SetPoint("TOPLEFT", panel.showFloatingButton, "BOTTOMLEFT", 2, -8)
-	panel.resetFloatingPosButton:SetText("Reset Floating Button Position")
-	panel.resetFloatingPosButton:SetScript("OnClick", function()
-		if not ns.resetFloatingButtonPosition then
-			print("Speedster: floating button is not ready yet.")
-			return
-		end
-		local ok, reason = ns.resetFloatingButtonPosition()
-		if ok then
-			print("Speedster: floating button position reset.")
-		elseif reason then
-			print("Speedster: "..reason)
-		end
-	end)
-
-	-- Section: Keybind
-	local keybindHeader = createSectionHeader(panel, "Keybind", panel.resetFloatingPosButton, -14)
-
-	panel.bindButton = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-	panel.bindButton:SetSize(220, 22)
-	panel.bindButton:SetPoint("TOPLEFT", keybindHeader, "BOTTOMLEFT", 0, -8)
-	panel.bindButton:SetText("Bind Key")
-	panel.bindButton:SetScript("OnClick", function()
-		startBindCapture(panel.bindButton, ns.getPrimaryBindingCommand(), "speed macro")
-	end)
-
-	panel.bindCapture = CreateFrame("Frame", nil, panel)
-	panel.bindCapture:SetAllPoints(panel)
-	panel.bindCapture:EnableKeyboard(false)
-	panel.bindCapture:EnableMouse(false)
-	panel.bindCapture:EnableMouseWheel(true)
-	if panel.bindCapture.SetPropagateKeyboardInput then
-		panel.bindCapture:SetPropagateKeyboardInput(true)
-	end
-	if panel.bindCapture.SetPropagateMouseClicks then
-		panel.bindCapture:SetPropagateMouseClicks(true)
-	end
-	if panel.bindCapture.SetPropagateMouseMotion then
-		panel.bindCapture:SetPropagateMouseMotion(true)
-	end
-	panel.bindCapture:Hide()
-	panel.bindCapture:SetScript("OnKeyDown", function(_, key)
-		tryBindCapturedKey(key)
-	end)
-	panel.bindCapture:SetScript("OnMouseDown", function(_, button)
-		tryBindCapturedKey(button)
-	end)
-	panel.bindCapture:SetScript("OnMouseWheel", function(_, delta)
-		tryBindCapturedKey(delta > 0 and "MOUSEWHEELUP" or "MOUSEWHEELDOWN")
-	end)
-
-	panel.bindText = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-	panel.bindText:SetPoint("TOPLEFT", panel.bindButton, "BOTTOMLEFT", 0, -8)
-	panel.bindText:SetJustifyH("LEFT")
-	panel.bindText:SetText("Current keybind: "..NOT_BOUND)
-
-	-- Current macro
-	panel.macroLabel = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-	panel.macroLabel:SetPoint("TOPLEFT", panel.bindText, "BOTTOMLEFT", 0, -16)
-	panel.macroLabel:SetJustifyH("LEFT")
-	panel.macroLabel:SetText("Current macro:")
-
-	panel.macroValue = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-	panel.macroValue:SetPoint("TOPLEFT", panel.macroLabel, "BOTTOMLEFT", 0, -4)
-	panel.macroValue:SetPoint("RIGHT", panel, -16, 0)
-	panel.macroValue:SetJustifyH("LEFT")
-	panel.macroValue:SetJustifyV("TOP")
-	panel.macroValue:SetNonSpaceWrap(true)
-	panel.macroValue:SetText("")
-
-	panel.help = panel:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
-	panel.help:SetPoint("TOPLEFT", panel.macroValue, "BOTTOMLEFT", 0, -10)
-	panel.help:SetPoint("RIGHT", panel, -16, 0)
-	panel.help:SetJustifyH("LEFT")
-	panel.help:SetText(
-		"Click 'Bind Key', then press your next key/button.\n"
-		.."/speedster - Open Speedster options\n"
-		.."/speedster debug - Open a copyable diagnostic report\n"
-		.."/speedsterbind [KEY] - Bind speed macro to key (blank = NUMPADMINUS)\n"
-		.."/speedstermacro - Print current generated macro"
-	)
-
-	panel.diagnosticsButton = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-	panel.diagnosticsButton:SetSize(220, 22)
-	panel.diagnosticsButton:SetPoint("TOPLEFT", panel.help, "BOTTOMLEFT", 0, -10)
-	panel.diagnosticsButton:SetText("Copy Troubleshooting Report")
-	panel.diagnosticsButton:SetScript("OnClick", function()
-		if ns.ShowDiagnosticReport then ns.ShowDiagnosticReport() end
-	end)
-
-	panel.utilityHeader = createSectionHeader(panel, "Additional movement actions", panel.diagnosticsButton, -18)
-	panel.utilityNone = panel:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
-	panel.utilityNone:SetPoint("TOPLEFT", panel.utilityHeader, "BOTTOMLEFT", 0, -8)
-	panel.utilityNone:SetText("Additional actions appear here after this character learns them.")
-	panel.utilityRows = {}
-	panel.utilityRowsByID = {}
-	for _, id in ipairs(ns.getUtilityActionIDs()) do
-		local row = CreateFrame("Frame", nil, panel)
-		row:SetSize(520, 44)
-		row.label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-		row.label:SetPoint("TOPLEFT", 0, 0)
-		row.label:SetJustifyH("LEFT")
-		row.bindButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-		row.bindButton:SetSize(92, 20)
-		row.bindButton:SetPoint("TOPRIGHT", 0, 0)
-		row.bindButton:SetText("Bind Key")
-		row.bindButton:SetScript("OnClick", function()
-			startBindCapture(row.bindButton, row.bindCommand, row.bindLabel)
+	_, y = UI.Header(panel, "Behaviour", y)
+	local taxi
+	taxi, y = UI.Check(panel, ns.camelotPreview and "Cancel shapeshift at flight masters (unavailable in Forever)"
+			or "Cancel shapeshift at flight masters",
+		"Leave a travel form automatically when you open a flight map.", y,
+		function() return not ns.camelotPreview and db().cancel_form_on_taxi end,
+		function(value)
+			if ns.camelotPreview then return end
+			db().cancel_form_on_taxi = value
 		end)
-		row.keyText = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-		row.keyText:SetPoint("TOPRIGHT", row.bindButton, "BOTTOMLEFT", 0, -2)
-		row.keyText:SetJustifyH("RIGHT")
-		row.warning = row:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+	if ns.camelotPreview then UI.SetEnabled(taxi.hcCheckbox, false) end
+	return y
+end)
+
+-- ── Visibility: the floating button ────────────────────────────────────────
+
+HC.Settings:AddVisibility()
+HC.spec.visibility = function(panel, y)
+	_, y = UI.Header(panel, "Floating button", y)
+	_, y = UI.Check(panel, "Show floating button", "A clickable speed button on screen. Shift-drag to move it.", y,
+		function() return ns.db.show_floating_button end,
+		function(value) ns.db.show_floating_button = value; ns.refreshSpeedButton() end)
+	local reset = UI.Button(panel, 200, 22)
+	reset:SetPoint("TOPLEFT", UI.PAD, y - 4)
+	reset:SetText("Reset button position")
+	reset:SetScript("OnClick", function() HC.Commands:Dispatch("reset position") end)
+	return y - 38
+end
+
+-- ── Key Bindings ───────────────────────────────────────────────────────────
+
+HC.Settings:NewPage({ name = "Key Bindings", description = "Keys for the speed macro and extra movement actions." }, function(panel, y)
+	local card
+	card, y = UI.Card(panel, y, 56)
+	local name = UI.FontString(card)
+	name:SetPoint("TOPLEFT", 16, -12)
+	name:SetText("Speed macro")
+	local current = UI.FontString(card, "GameFontHighlightSmall", "muted")
+	current:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -4)
+	local bind = UI.Button(card, 190, 24)
+	bind:SetPoint("RIGHT", -12, 0)
+	bind:SetText("Bind key")
+	UI.AttachHint(bind, "Bind key", "Click, then press a key, mouse button or wheel. Esc cancels.")
+	bind:SetScript("OnClick", function() startCapture(bind, ns.getPrimaryBindingCommand(), "speed macro") end)
+	UI.OnRefresh(panel, function() current:SetText("Key: " .. ns.getBindingText()) end)
+
+	_, y = UI.Header(panel, "Current macro", y)
+	local macro = UI.FontString(panel, "GameFontHighlightSmall")
+	macro:SetPoint("TOPLEFT", UI.PAD, y)
+	macro:SetWidth(UI.CONTENT_WIDTH)
+	macro:SetJustifyH("LEFT")
+	macro:SetJustifyV("TOP")
+	if macro.SetNonSpaceWrap then macro:SetNonSpaceWrap(true) end
+	UI.OnRefresh(panel, function()
+		local text = ns.getMacro()
+		macro:SetText(text ~= "" and text or "No speed macro yet for this class and level.")
+	end)
+	y = y - 64
+
+	_, y = UI.Header(panel, "Additional movement actions", y)
+	local listTop = y
+	local none = UI.FontString(panel, "GameFontHighlightSmall", "muted")
+	none:SetPoint("TOPLEFT", UI.PAD, listTop)
+	none:SetText("Actions appear here once this character learns them.")
+	local rows = {}
+	for _, id in ipairs(ns.getUtilityActionIDs()) do
+		local row = CreateFrame("Frame", nil, panel, "BackdropTemplate")
+		row:SetSize(UI.CONTENT_WIDTH, 44)
+		T.Surface(row, "raised", "edge")
+		row.label = UI.FontString(row)
+		row.label:SetPoint("TOPLEFT", 12, -8)
+		row.warning = UI.FontString(row, "GameFontHighlightSmall", "muted")
 		row.warning:SetPoint("TOPLEFT", row.label, "BOTTOMLEFT", 0, -3)
-		row.warning:SetPoint("RIGHT", row.keyText, "LEFT", -8, 0)
+		row.warning:SetWidth(330)
 		row.warning:SetJustifyH("LEFT")
+		if row.warning.SetWordWrap then row.warning:SetWordWrap(false) end
+		row.bind = UI.Button(row, 92, 22)
+		row.bind:SetPoint("RIGHT", -10, 0)
+		row.bind:SetText("Bind key")
+		row.bind:SetScript("OnClick", function() startCapture(row.bind, row.command, row.name) end)
+		row.key = UI.FontString(row, "GameFontHighlightSmall", "muted")
+		row.key:SetPoint("RIGHT", row.bind, "LEFT", -10, 0)
 		row:Hide()
-		panel.utilityRows[#panel.utilityRows + 1] = row
-		panel.utilityRowsByID[id] = row
+		rows[id] = row
 	end
-end
-
-panel:SetScript("OnShow", function()
-	ensureBuilt()
-	refreshPanel()
-end)
-panel:HookScript("OnHide", function()
-	if waitingForBind then
-		stopBindCapture()
-	end
-end)
-
-local function registerPanel()
-	if panel._registered then return end
-
-	if Settings
-	and type(Settings.RegisterCanvasLayoutCategory) == "function"
-	and type(Settings.RegisterAddOnCategory) == "function"
-	then
-		local category = Settings.RegisterCanvasLayoutCategory(panel, panel.name, panel.name)
-		if category then
-			categoryID = category:GetID()
-			panel.category = category
-			Settings.RegisterAddOnCategory(category)
-			panel._registered = true
-			return
+	local function layout()
+		local y = listTop
+		for _, row in pairs(rows) do row:Hide() end
+		local shown = 0
+		for _, action in ipairs(ns.getUtilityActions()) do
+			local row = rows[action.id]
+			if row then
+				shown = shown + 1
+				row:ClearAllPoints()
+				row:SetPoint("TOPLEFT", UI.PAD, y)
+				row.label:SetText(action.label)
+				row.warning:SetText(action.warning or "")
+				row.key:SetText("Key: " .. ns.getActionBindingText(action.bindingCommand))
+				row.command, row.name = action.bindingCommand, action.label
+				row:Show()
+				y = y - 50
+			end
 		end
+		none:SetShown(shown == 0)
+		if shown == 0 then y = y - 24 end
+		panel.hcSetBottom(y)
+		return y
 	end
-
-	if type(InterfaceOptions_AddCategory) == "function" then
-		InterfaceOptions_AddCategory(panel)
-		panel._registered = true
-	end
-end
-
-function ns.showOptions()
-	registerPanel()
-	ensureBuilt()
-	refreshPanel()
-
-	if Settings and Settings.OpenToCategory and categoryID then
-		Settings.OpenToCategory(categoryID)
-		Settings.OpenToCategory(categoryID)
-	elseif InterfaceOptionsFrame_OpenToCategory then
-		InterfaceOptionsFrame_OpenToCategory(panel)
-		InterfaceOptionsFrame_OpenToCategory(panel)
-	else
-		panel:Show()
-	end
-end
-
-registerPanel()
+	UI.OnRefresh(panel, layout)
+	return layout()
+end)
