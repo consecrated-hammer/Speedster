@@ -2,27 +2,29 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-26
+
 ### Added
+
+- A lore quiz: the quest "!" on the About page, or `/speedster quiz`, asks five
+  questions suited to your client, class and race. **Share result** posts
+  the verdict to yourself, Say or Party in one click; it is unavailable in
+  combat and during keys, PvP matches and encounters.
+- New commands: `help`, `version`, `about`, `debug`, `startup`, `minimap`,
+  `reset position`, `reset settings`, `toggle`, `bind` and `macro`.
 
 ### Changed
 
-- Move the current macro from Key Bindings to its own section beneath
-  Behaviour on Speed.
-
-- Speedster now uses HammerCore, the settings, command and chat foundation
-  shared by every Consecrated Hammer addon:
-  - Settings move from the single Blizzard options page to the shared
-    settings window: Speed, Visibility (floating button, then minimap button
-    and startup message) and Key Bindings, then Commands,
-    Troubleshooting and About.
-  - The login message reads `Speedster v0.4.11 loaded - type /speedster for
-    settings, /speedster help for commands`, and chat uses the shared gold
-    name prefix.
-  - New commands: `help`, `version`, `about`, `debug`, `startup`,
-    `minimap`, `reset position`, `reset settings`, `toggle`,
-    `bind`, `macro` and `quiz`.
-  - Right-click the minimap button to show or hide the floating button.
-  - Your startup-message and minimap choices carry over.
+- Speedster now uses HammerCore, the settings, command and chat foundation shared
+  by every Consecrated Hammer addon. The login message reads
+  `Speedster v0.5.0 loaded - type /speedster for settings, /speedster help for commands`, chat uses
+  a gold name prefix, and `/speedster help` lists every command.
+- Settings move from the single Blizzard options page to the shared window:
+  Speed (with the current macro), Visibility (floating button, then minimap
+  button and startup message) and Key Bindings, then Commands,
+  Troubleshooting and About.
+- Right-click the minimap button to show or hide the floating button.
+- Your startup-message and minimap choices carry over.
 
 ### Removed
 

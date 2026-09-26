@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Speedster
 ## Author: consecrated-hammer
-## Version: 0.4.11
+## Version: 0.5.0
 ## X-ReleaseDate: 2026-09-26
 ## IconTexture: Interface\AddOns\Speedster\textures\Speedster.tga
 ## Notes: Simple movement speed macro helper.
