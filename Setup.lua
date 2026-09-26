@@ -36,7 +36,7 @@ HC:Init({
 		minimap = "show_minimap_button",
 		minimapAngle = "minimap_angle",
 	},
-	clientLabel = function() return ns.camelotPreview and "WoW Forever" or "Retail" end,
+	clientLabel = function() return "WoW Forever" end,
 	minimap = {
 		rightClick = function() setFloating(not ns.db.show_floating_button) end,
 		rightClickLabel = "show or hide the floating button",

@@ -1,6 +1,6 @@
 ## Speedster
 
-Speedster is a lightweight World of Warcraft Retail and WoW Forever addon that generates a class-aware movement speed macro and binds it to a key through a simple options panel.
+Speedster is a lightweight WoW Forever addon that generates a class-aware movement speed macro and binds it to a key through a simple options panel.
 
 ## What It Does
 
@@ -9,7 +9,6 @@ Speedster is a lightweight World of Warcraft Retail and WoW Forever addon that g
 - Lets you bind your preferred key or mouse button from the options panel ("press next key/button" capture).
 - Exposes separately bindable learned movement, descent, terrain-travel and escape actions.
 - Shows your currently generated macro in the options panel.
-- Optional flight master support can auto-cancel form/dismount so you can select a taxi destination without manual unshifting.
 
 ## Supported Class Speed Abilities
 

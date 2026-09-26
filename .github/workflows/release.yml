@@ -26,10 +26,10 @@ jobs:
       - name: Verify release metadata
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          toc=$(sed -n 's/^## Version:[[:space:]]*//p' Speedster.toc | tr -d '[:space:]')
+          toc=$(sed -n 's/^## Version:[[:space:]]*//p' Speedster_Camelot.toc | tr -d '[:space:]')
           test "$tag" = "$toc"
           grep -qE "^## \[$tag\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md
-          grep -q '^## X-Curse-Project-ID: 1469829$' Speedster.toc
+          grep -q '^## X-Curse-Project-ID: 1469829$' Speedster_Camelot.toc
       - name: Extract release notes
         run: |
           tag="${GITHUB_REF_NAME#v}"

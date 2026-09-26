@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Removed
+
+- Retail support: Speedster is now a WoW Forever addon only.
+- The flight-master shapeshift cancel, which only ever worked on Retail.
+- Test files from the packaged download.
+
 ## [0.5.0] - 2026-09-26
 
 ### Added

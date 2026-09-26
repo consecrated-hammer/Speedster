@@ -126,18 +126,6 @@ HC.Settings:NewPage({ name = "Speed", description = "One key for the fastest way
 		end
 	end
 
-	_, y = UI.Header(panel, "Behaviour", y)
-	local taxi
-	taxi, y = UI.Check(panel, ns.camelotPreview and "Cancel shapeshift at flight masters (unavailable in Forever)"
-			or "Cancel shapeshift at flight masters",
-		"Leave a travel form automatically when you open a flight map.", y,
-		function() return not ns.camelotPreview and db().cancel_form_on_taxi end,
-		function(value)
-			if ns.camelotPreview then return end
-			db().cancel_form_on_taxi = value
-		end)
-	if ns.camelotPreview then UI.SetEnabled(taxi.hcCheckbox, false) end
-
 	local divider = T.Fill(panel:CreateTexture(nil, "ARTWORK"), "edge")
 	divider:SetHeight(1)
 	divider:SetPoint("TOPLEFT", UI.PAD, y - 2)

@@ -43,7 +43,7 @@ local function loadAddon(tocName, saved, class)
     return ns
 end
 
-for _, toc in ipairs({ "Speedster.toc", "Speedster_Camelot.toc" }) do
+for _, toc in ipairs({ "Speedster_Camelot.toc" }) do
     local ns = loadAddon(toc, { enabled = true, druid_use_travel = true, show_floating_button = true,
         show_minimap_button = false, minimap_angle = 15, show_startup_message = true }, "DRUID")
     local HC = ns.HammerCore
@@ -94,7 +94,7 @@ for _, toc in ipairs({ "Speedster.toc", "Speedster_Camelot.toc" }) do
 end
 
 -- Every page also builds under HammerCore's Classic theme.
-for _, toc in ipairs({ "Speedster.toc", "Speedster_Camelot.toc" }) do
+for _, toc in ipairs({ "Speedster_Camelot.toc" }) do
     local ns = loadAddon(toc, { enabled = true, hammerCore = { theme = "classic" } }, "SHAMAN")
     local HC = ns.HammerCore
     -- Classic is switched off for players until it is reworked; keep it building.
