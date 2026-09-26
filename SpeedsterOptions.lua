@@ -138,14 +138,20 @@ HC.Settings:NewPage({ name = "Speed", description = "One key for the fastest way
 		end)
 	if ns.camelotPreview then UI.SetEnabled(taxi.hcCheckbox, false) end
 
-	_, y = UI.TextInput(panel, "Current macro", "Select this generated macro and copy it with Ctrl+C.", y,
+	local divider = T.Fill(panel:CreateTexture(nil, "ARTWORK"), "edge")
+	divider:SetHeight(1)
+	divider:SetPoint("TOPLEFT", UI.PAD, y - 2)
+	divider:SetPoint("TOPRIGHT", -20, y - 2)
+	y = y - 20
+	_, y = UI.Header(panel, "Current macro", y)
+	_, y = UI.Text(panel, "Speedster applies this macro to your speed key. No action needed.", y)
+	_, y = UI.TextInput(panel, "", "Select this generated macro and copy it with Ctrl+C.", y,
 		function()
 			local macro = ns.getMacro()
 			return macro ~= "" and macro or "No speed macro yet for this class and level."
 		end,
 		function() end,
 		UI.CONTENT_WIDTH, 440)
-	_, y = UI.Text(panel, "Select the text to copy it.", y)
 	return y
 end)
 

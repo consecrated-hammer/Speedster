@@ -6,7 +6,8 @@
 
 ### Changed
 
-- Move the copyable current macro from Key Bindings to Speed, below Behaviour.
+- Move the current macro from Key Bindings to its own section beneath
+  Behaviour on Speed.
 
 - Speedster now uses HammerCore, the settings, command and chat foundation
   shared by every Consecrated Hammer addon:
