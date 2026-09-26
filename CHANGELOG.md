@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Move the copyable current macro from Key Bindings to Speed, below Behaviour.
+
 - Speedster now uses HammerCore, the settings, command and chat foundation
   shared by every Consecrated Hammer addon:
   - Settings move from the single Blizzard options page to the shared

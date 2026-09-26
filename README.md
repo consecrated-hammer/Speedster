@@ -46,7 +46,8 @@ If your class has no supported speed spell available yet, the generated macro wi
 2. Bind a key on the **Key Bindings** page: click **Bind key**, then press the
    key or button you want. Learned additional actions have their own
    **Bind key**. Or type `/speedster bind [KEY]` (blank means `NUMPADMINUS`).
-3. See the generated macro on **Key Bindings**, or with `/speedster macro`.
+3. Copy the generated macro from **Speed**, below **Behaviour**, or print it
+   with `/speedster macro`.
 
 ## Commands
 

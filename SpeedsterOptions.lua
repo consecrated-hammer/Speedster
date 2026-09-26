@@ -137,6 +137,15 @@ HC.Settings:NewPage({ name = "Speed", description = "One key for the fastest way
 			db().cancel_form_on_taxi = value
 		end)
 	if ns.camelotPreview then UI.SetEnabled(taxi.hcCheckbox, false) end
+
+	_, y = UI.TextInput(panel, "Current macro", "Select this generated macro and copy it with Ctrl+C.", y,
+		function()
+			local macro = ns.getMacro()
+			return macro ~= "" and macro or "No speed macro yet for this class and level."
+		end,
+		function() end,
+		UI.CONTENT_WIDTH, 440)
+	_, y = UI.Text(panel, "Select the text to copy it.", y)
 	return y
 end)
 
@@ -171,19 +180,6 @@ HC.Settings:NewPage({ name = "Key Bindings", description = "Keys for the speed m
 	UI.AttachHint(bind, "Bind key", "Click, then press a key, mouse button or wheel. Esc cancels.")
 	bind:SetScript("OnClick", function() startCapture(bind, ns.getPrimaryBindingCommand(), "speed macro") end)
 	UI.OnRefresh(panel, function() current:SetText("Key: " .. ns.getBindingText()) end)
-
-	_, y = UI.Header(panel, "Current macro", y)
-	local macro = UI.FontString(panel, "GameFontHighlightSmall")
-	macro:SetPoint("TOPLEFT", UI.PAD, y)
-	macro:SetWidth(UI.CONTENT_WIDTH)
-	macro:SetJustifyH("LEFT")
-	macro:SetJustifyV("TOP")
-	if macro.SetNonSpaceWrap then macro:SetNonSpaceWrap(true) end
-	UI.OnRefresh(panel, function()
-		local text = ns.getMacro()
-		macro:SetText(text ~= "" and text or "No speed macro yet for this class and level.")
-	end)
-	y = y - 64
 
 	_, y = UI.Header(panel, "Additional movement actions", y)
 	local listTop = y
