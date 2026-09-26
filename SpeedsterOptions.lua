@@ -126,20 +126,6 @@ local function createCheckButton(parent)
 	return btn
 end
 
-local function isSpellKnownSafe(spellID)
-	if C_SpellBook and C_SpellBook.IsSpellKnown then
-		local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or 0
-		return C_SpellBook.IsSpellKnown(spellID, bank)
-	end
-	if IsSpellKnown then
-		return IsSpellKnown(spellID)
-	end
-	if IsPlayerSpell then
-		return IsPlayerSpell(spellID)
-	end
-	return false
-end
-
 local function hookHintTooltip(control)
 	local function showHint(owner)
 		if not control._speedsterHint then return end
@@ -239,14 +225,14 @@ local function refreshPanel()
 	local behaviorAnchor = panel.enable
 	if showClassSection then
 		if isDruid then
-			local hasTravelOption = isSpellKnownSafe(783) or isSpellKnownSafe(33943) or isSpellKnownSafe(40120)
+			local hasTravelOption = ns.isSpellKnownSafe(783) or ns.isSpellKnownSafe(33943) or ns.isSpellKnownSafe(40120)
 			panel.druidTravel:SetEnabled(hasTravelOption)
 			panel.druidTravel._speedsterHint = hasTravelOption and nil or "Unlocks after learning Travel Form."
 			panel.shamanGhostWolf:SetEnabled(false)
 			panel.shamanGhostWolf._speedsterHint = nil
 			behaviorAnchor = panel.druidTravel
 		elseif isShaman then
-			local hasGhostWolf = isSpellKnownSafe(2645)
+			local hasGhostWolf = ns.isSpellKnownSafe(2645)
 			panel.shamanGhostWolf:SetEnabled(hasGhostWolf)
 			panel.shamanGhostWolf._speedsterHint = hasGhostWolf and nil or "Unlocks after learning Ghost Wolf."
 			panel.druidTravel:SetEnabled(false)

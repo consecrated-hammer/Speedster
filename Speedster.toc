@@ -1,7 +1,7 @@
-## Interface: 120100, 20505, 11508
+## Interface: 120100
 ## Title: Speedster
 ## Author: consecratedhammer
-## Version: 0.4.10
+## Version: 0.4.11
 ## IconTexture: Interface\AddOns\Speedster\textures\Speedster.tga
 ## Notes: Simple movement speed macro helper.
 ## X-Curse-Project-ID: 1469829

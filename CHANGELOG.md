@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.11] - 2026-09-26
+
+### Changed
+
+- Support Retail and WoW Forever only; remove older Classic interface numbers.
+
+### Fixed
+
+- Keep Retail spell checks limited to its active spellbook while letting WoW
+  Forever confirm learned forms through its legacy APIs.
+- Keep the options panel's spell availability in sync with the generated macro.
+- Cast Aquatic Form only while swimming when it is the Druid's sole known form.
+
 ## [0.4.10] - 2026-09-19
 
 ### Fixed

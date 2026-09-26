@@ -190,18 +190,25 @@ local function trim(text)
 end
 
 local function isSpellKnownSafe(spellID)
+	-- Forever can expose the modern API without reporting every learned form.
+	-- Retail must not use legacy positives to enable an off-spec spell.
 	if C_SpellBook and C_SpellBook.IsSpellKnown then
 		local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or 0
-		return C_SpellBook.IsSpellKnown(spellID, bank)
+		local ok, known = pcall(C_SpellBook.IsSpellKnown, spellID, bank)
+		if ok and known then return true end
 	end
+	if not camelotPreview then return false end
 	if IsSpellKnown then
-		return IsSpellKnown(spellID)
+		local ok, known = pcall(IsSpellKnown, spellID)
+		if ok and known then return true end
 	end
 	if IsPlayerSpell then
-		return IsPlayerSpell(spellID)
+		local ok, known = pcall(IsPlayerSpell, spellID)
+		if ok and known then return true end
 	end
 	return false
 end
+ns.isSpellKnownSafe = isSpellKnownSafe
 
 local function getSpellNameIfKnown(spellID)
 	if not isSpellKnownSafe(spellID) then return end
@@ -259,24 +266,25 @@ local function buildMacro()
 	local _, classFile = UnitClass("player")
 	if classFile == "DRUID" then
 		local cat = getSpellNameIfKnown(768)
-		if not cat then return "" end
-
 		local aquatic = getSpellNameIfKnown(1066)
 		local travel = db.druid_use_travel and getSpellNameIfKnown(783) or nil
 		local flight = db.druid_use_travel and (getSpellNameIfKnown(40120) or getSpellNameIfKnown(33943)) or nil
 
 		if travel then
 			local air = flight or travel
-			if aquatic then
-				return ("/cast [swimming]!%s;[indoors]!%s;[flyable,nocombat]!%s;!%s"):format(aquatic, cat, air, travel)
-			end
-			return ("/cast [indoors]!%s;[flyable,nocombat]!%s;!%s"):format(cat, air, travel)
+			local clauses = {}
+			if aquatic then clauses[#clauses + 1] = "[swimming]!"..aquatic end
+			if cat then clauses[#clauses + 1] = "[indoors]!"..cat end
+			clauses[#clauses + 1] = "[flyable,nocombat]!"..air
+			clauses[#clauses + 1] = "!"..travel
+			return "/cast "..table.concat(clauses, ";")
 		end
 
 		if aquatic then
-			return ("/cast [swimming]!%s;!%s"):format(aquatic, cat)
+			if cat then return ("/cast [swimming]!%s;!%s"):format(aquatic, cat) end
+			return "/cast [swimming]!"..aquatic
 		end
-		return "/cast !"..cat
+		if cat then return "/cast !"..cat end
 	end
 
 	if classFile == "SHAMAN" then
