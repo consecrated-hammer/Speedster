@@ -1,9 +1,13 @@
 ## Interface: 120100
 ## Title: Speedster
-## Author: consecratedhammer
+## Author: consecrated-hammer
 ## Version: 0.4.11
+## X-ReleaseDate: 2026-09-26
 ## IconTexture: Interface\AddOns\Speedster\textures\Speedster.tga
 ## Notes: Simple movement speed macro helper.
+## X-License: GPL-3.0
+## X-Website: https://github.com/consecrated-hammer/Speedster
+## X-CurseForge: https://www.curseforge.com/wow/addons/speedster
 ## X-Curse-Project-ID: 1469829
 ## SavedVariablesPerCharacter: SpeedsterDB
 ## LoadSavedVariablesFirst: 1
