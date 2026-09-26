@@ -57,7 +57,7 @@ for _, toc in ipairs({ "Speedster.toc", "Speedster_Camelot.toc" }) do
     equal(HC.Settings:IsShown(), true, toc .. ": the bare command opens settings")
     local names = {}
     for _, spec in ipairs(HC.Settings.order) do names[#names + 1] = spec.name end
-    equal(table.concat(names, ","), "Speed,Visibility,Key Bindings,Theme,Commands,Troubleshooting,About",
+    equal(table.concat(names, ","), "Speed,Visibility,Key Bindings,Commands,Troubleshooting,About",
         toc .. ": rail order")
     local failures = {}
     for name, err in pairs(HC.Settings.errors) do failures[#failures + 1] = name .. ": " .. err end
@@ -97,6 +97,8 @@ end
 for _, toc in ipairs({ "Speedster.toc", "Speedster_Camelot.toc" }) do
     local ns = loadAddon(toc, { enabled = true, hammerCore = { theme = "classic" } }, "SHAMAN")
     local HC = ns.HammerCore
+    -- Classic is switched off for players until it is reworked; keep it building.
+    HC.Theme.registry.classic.available = true
     equal(HC.Theme.IsClassic(), true, toc .. ": classic theme is active")
     HC.Settings:Show()
     local failures = {}

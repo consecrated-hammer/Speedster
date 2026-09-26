@@ -4,22 +4,19 @@
 
 ### Added
 
-- A **Classic** settings theme, Blizzard's 2004 look, on the Theme page or
-  with `/speedster theme classic` (applies after a reload).
-
 ### Changed
 
 - Speedster now uses HammerCore, the settings, command and chat foundation
   shared by every Consecrated Hammer addon:
   - Settings move from the single Blizzard options page to the shared
     settings window: Speed, Visibility (floating button, then minimap button
-    and startup message) and Key Bindings, then Theme, Commands,
+    and startup message) and Key Bindings, then Commands,
     Troubleshooting and About.
   - The login message reads `Speedster v0.4.11 loaded - type /speedster for
     settings, /speedster help for commands`, and chat uses the shared gold
     name prefix.
   - New commands: `help`, `version`, `about`, `debug`, `startup`,
-    `minimap`, `theme`, `reset position`, `reset settings`, `toggle`,
+    `minimap`, `reset position`, `reset settings`, `toggle`,
     `bind`, `macro` and `quiz`.
   - Right-click the minimap button to show or hide the floating button.
   - Your startup-message and minimap choices carry over.

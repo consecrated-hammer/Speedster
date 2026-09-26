@@ -59,7 +59,6 @@ If your class has no supported speed spell available yet, the generated macro wi
 | `/speedster debug` | Open a copyable diagnostic report |
 | `/speedster startup [on\|off]` | Show the startup message |
 | `/speedster minimap [on\|off]` | Show the minimap button |
-| `/speedster theme [modern\|classic]` | Choose the settings theme |
 | `/speedster reset position` | Move the floating button back |
 | `/speedster reset settings` | Reset every setting after a confirmation |
 | `/speedster toggle` | Show or hide the floating button |
