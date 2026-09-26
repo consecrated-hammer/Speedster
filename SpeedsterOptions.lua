@@ -145,13 +145,24 @@ HC.Settings:NewPage({ name = "Speed", description = "One key for the fastest way
 	y = y - 20
 	_, y = UI.Header(panel, "Current macro", y)
 	_, y = UI.Text(panel, "Speedster applies this macro to your speed key. No action needed.", y)
-	_, y = UI.TextInput(panel, "", "Select this generated macro and copy it with Ctrl+C.", y,
-		function()
-			local macro = ns.getMacro()
-			return macro ~= "" and macro or "No speed macro yet for this class and level."
-		end,
-		function() end,
-		UI.CONTENT_WIDTH, 440)
+	local macro = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
+	macro:SetSize(UI.CONTENT_WIDTH - 24, 26)
+	macro:SetPoint("TOPLEFT", UI.PAD + 12, y)
+	macro:SetAutoFocus(false)
+	macro:SetFontObject(ChatFontNormal)
+	macro:SetTextInsets(8, 8, 0, 0)
+	T.Surface(macro, "rail", "edge")
+	local function macroText()
+		local text = ns.getMacro()
+		return text ~= "" and text or "No speed macro yet for this class and level."
+	end
+	macro:SetScript("OnEscapePressed", function(self) self:SetText(macroText()); self:ClearFocus() end)
+	UI.AttachHint(macro, "Current macro", "Select and copy this generated macro if useful.")
+	UI.OnRefresh(panel, function()
+		if not (macro.HasFocus and macro:HasFocus()) then macro:SetText(macroText()) end
+	end)
+	macro:SetText(macroText())
+	y = y - 34
 	return y
 end)
 
