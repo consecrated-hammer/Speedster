@@ -69,3 +69,8 @@ If your class has no supported speed spell available yet, the generated macro wi
 Settings, commands, the minimap button and the reference pages come from
 [HammerCore](https://github.com/consecrated-hammer/HammerCore), shared by
 every Consecrated Hammer addon and vendored under `Libs/HammerCore`.
+
+## Support
+
+Bug reports, ideas and questions: the [Consecrated Hammer Discord](https://discord.gg/z3xKxRygDc)
+(`#bug-reports`, `#suggestions`, `#help`).
