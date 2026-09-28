@@ -1,76 +1,62 @@
-## Speedster
+# Speedster
 
-Speedster is a lightweight WoW Forever addon that generates a class-aware movement speed macro and binds it to a key through a simple options panel.
+**One key, go zoom-zoom!**
 
-## What It Does
+_Water, indoors or out, your druid picks the right form._
 
-- Builds a dynamic movement macro based on your class and known spells.
-- Updates automatically when you learn new relevant spells/forms.
-- Lets you bind your preferred key or mouse button from the options panel ("press next key/button" capture).
-- Exposes separately bindable learned movement, descent, terrain-travel and escape actions.
-- Shows your currently generated macro in the options panel.
+[![Discord](https://img.shields.io/badge/discord-join-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/z3xKxRygDc) [![WoW Forever](https://img.shields.io/badge/wow%20forever-supported-4c9a7a?style=flat-square)](https://www.curseforge.com/wow/addons/speedster) [![Release](https://img.shields.io/github/v/release/consecrated-hammer/Speedster?style=flat-square&color=4c9a7a&label=release)](https://github.com/consecrated-hammer/Speedster/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-4c9a7a?style=flat-square)](https://github.com/consecrated-hammer/Speedster/blob/main/LICENSE.txt)
 
-## Supported Class Speed Abilities
+Questions, bugs or ideas? Come say hi on the [Consecrated Hammer Discord](https://discord.gg/z3xKxRygDc). Bug reports go in `#bug-reports`, or you can open a [GitHub issue](https://github.com/consecrated-hammer/Speedster/issues).
 
-- Druid: Cat Form, Aquatic Form, Travel/Flight Form logic (when known)
-- Shaman: Ghost Wolf
-- Hunter: Aspect of the Cheetah
-- Rogue: Sprint
-- Mage: Blink
+---
 
-## Additional Bindable Actions
+Speedster builds a movement macro for your class from the spells you know, and puts it on one key. Press it and you get the fastest way to move for where you are. It's for WoW Forever, and was originally inspired by MountsJournal's keybindable movement macro.
 
-When the character knows one of these abilities, it appears in **Additional
-movement actions** in Speedster's options with its own **Bind Key** control.
-No action is bound automatically.
+## What it does
 
-- Druid: Dash
-- Hunter: Aspect of the Pack (shown with its daze warning)
-- Mage: Slow Fall
-- Priest: Levitate
-- Shaman: Water Walking
-- Paladin: Blessing of Freedom (self-cast)
-- Gnome: Escape Artist
-- Skyborne: Walk on Air and, for Windshapers, Skysight
+- **Builds the macro for you**, from your class and known spells, and rebuilds it when you learn something new.
+- **Picks the right form for druids.** Aquatic Form while swimming, Cat Form indoors, and Travel Form outdoors (or Flight Form where you can fly, once you have it).
+- **Covers the other speed classes too:** Shaman Ghost Wolf, Hunter Aspect of the Cheetah, Rogue Sprint and Mage Blink.
+- **Extra movement keys.** Spells you know from the list below each get their own key, so they don't fight with the main one:
+  - Druid Dash
+  - Hunter Aspect of the Pack (with a daze warning)
+  - Mage Slow Fall and Priest Levitate (these use Light Feathers)
+  - Shaman Water Walking (uses Fish Oil)
+  - Paladin Blessing of Freedom, cast on yourself
+  - Gnome Escape Artist
+  - Skyborne Walk on Air and, for Windshapers, Skysight
+- **A floating button** you can click instead of using a key.
 
-Slow Fall and Levitate consume Light Feathers; Water Walking consumes Fish Oil.
-The normal Speedster key remains independent, so a player can use any desired
-key or mouse button for each available action.
+## Getting started
 
-If your class has no supported speed spell available yet, the generated macro will be empty until one is learned.
-
-## Usage
-
-1. Open settings with `/speedster`.
-2. Bind a key on the **Key Bindings** page: click **Bind key**, then press the
-   key or button you want. Learned additional actions have their own
-   **Bind key**. Or type `/speedster bind [KEY]` (blank means `NUMPADMINUS`).
-3. Review the generated macro on **Speed**, below **Behaviour**, or print it
-   with `/speedster macro`. Speedster applies it to your speed key for you.
+1. Install, then type `/speedster` for settings.
+2. On the **Key Bindings** page, click **Bind key** and press the key or mouse button you want. Each extra movement spell you know has its own **Bind key** there too. Nothing is bound until you choose it.
+3. The **Speed** page shows the macro Speedster made for you. There's nothing to copy; it's already on your key.
 
 ## Commands
 
-| Command | Effect |
+| Command | What it does |
 | --- | --- |
 | `/speedster` | Open settings |
-| `/speedster help` | List every command |
-| `/speedster version` | Print the loaded version and client |
-| `/speedster about` | Open the About page |
-| `/speedster debug` | Open a copyable diagnostic report |
-| `/speedster startup [on\|off]` | Show the startup message |
-| `/speedster minimap [on\|off]` | Show the minimap button |
-| `/speedster reset position` | Move the floating button back |
-| `/speedster reset settings` | Reset every setting after a confirmation |
-| `/speedster toggle` | Show or hide the floating button |
-| `/speedster bind [KEY]` | Bind the speed macro |
+| `/speedster bind [KEY]` | Bind the speed macro (leave the key blank for `NUMPADMINUS`) |
 | `/speedster macro` | Print the current speed macro |
-| `/speedster quiz` | Take a five-question lore quiz |
+| `/speedster toggle` | Show or hide the floating button |
+| `/speedster reset position` | Move the floating button back |
 
-Settings, commands, the minimap button and the reference pages come from
-[HammerCore](https://github.com/consecrated-hammer/HammerCore), shared by
-every Consecrated Hammer addon and vendored under `Libs/HammerCore`.
+Every Consecrated Hammer addon also has `help`, `version`, `about`, `debug`, `startup`, `minimap`, `reset settings` and `quiz`.
 
-## Support
+Shift-drag the floating button to move it.
 
-Bug reports, ideas and questions: the [Consecrated Hammer Discord](https://discord.gg/z3xKxRygDc)
-(`#bug-reports`, `#suggestions`, `#help`).
+## Settings worth knowing
+
+- **Use Travel Form outdoors** (druids) is on the Speed page. Turn it off and the macro sticks to Aquatic Form in water and Cat Form everywhere else.
+- **Use Ghost Wolf** (shamans) is on the Speed page too, if you'd rather not have it on your key.
+
+## Limits
+
+- **Nothing to press until you learn something.** If your class has no supported speed spell yet, the macro stays empty until you learn one.
+- **WoW Forever only.** Speedster doesn't have a Retail version.
+
+## Licence
+
+GPL v3, see [LICENSE.txt](https://github.com/consecrated-hammer/Speedster/blob/main/LICENSE.txt).
