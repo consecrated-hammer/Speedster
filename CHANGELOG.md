@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-28
+
+### Changed
+
+- CurseForge release notes now come from this changelog instead of a list of
+  commit messages.
+
 ## [1.0.0] - 2026-10-28
 
 ### Added

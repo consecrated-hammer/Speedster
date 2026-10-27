@@ -1,5 +1,9 @@
 package-as: Speedster
 
+manual-changelog:
+  filename: RELEASE_NOTES.md
+  markup-type: markdown
+
 ignore:
   - .github
   - .pkgmeta
