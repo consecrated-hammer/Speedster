@@ -21,7 +21,7 @@ function ns.BuildDiagnosticReport()
     local floating = _G[addonName .. "FloatingButton"]
     local lines = {
         "Interface: " .. tostring(interface or "unknown"),
-        "Target: " .. tostring(ns.addonMetadata and ns.addonMetadata("X-Speedster-Target") or "Retail"),
+        "Target: " .. tostring(ns.addonMetadata and ns.addonMetadata("X-Speedster-Target") or "Camelot"),
         "Database: " .. (ns.dbWasFresh and "created this load" or type(ns.db) == "table" and "loaded" or "unavailable"),
         "Enabled: " .. yesNo(db.enabled),
         "Class: " .. tostring(select(2, UnitClass("player")) or "unknown"),

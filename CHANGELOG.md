@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-28
+
+### Added
+
+- The GPL v3 licence text as `LICENSE.txt`, so the licence links in the README
+  and on CurseForge resolve.
+
 ### Removed
 
 - Retail support: Speedster is now a WoW Forever addon only.

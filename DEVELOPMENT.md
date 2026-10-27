@@ -16,5 +16,10 @@ docker run --rm -v "$PWD:/r:ro" -w /r nickblah/lua:5.1-alpine sh -c \
 python3 ../HammerCore/tools/stage.py .
 ```
 
+`stage.py` still targets the old Forever beta folder
+(`wow-forever-beta-interface`). The release client hasn't been confirmed to
+load from there, so pass `--output <AddOns folder>` until HammerCore's Forever
+staging path is updated.
+
 Confirm the loaded version in game with `/speedster version`. Releases are
 tagged from `main` only.
