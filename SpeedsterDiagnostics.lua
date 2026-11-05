@@ -24,6 +24,7 @@ function ns.BuildDiagnosticReport()
         "Target: " .. tostring(ns.addonMetadata and ns.addonMetadata("X-Speedster-Target") or "Camelot"),
         "Database: " .. (ns.dbWasFresh and "created this load" or type(ns.db) == "table" and "loaded" or "unavailable"),
         "Enabled: " .. yesNo(db.enabled),
+        "Walk on Air while falling: " .. yesNo(db.walk_on_air_while_falling),
         "Class: " .. tostring(select(2, UnitClass("player")) or "unknown"),
         "Primary binding: " .. tostring(ns.getBindingText and ns.getBindingText() or "unknown"),
         "Utility actions exposed: " .. tostring(#(ns.getUtilityActionIDs and ns.getUtilityActionIDs() or {})),

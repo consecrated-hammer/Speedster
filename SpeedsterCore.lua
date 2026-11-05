@@ -111,7 +111,7 @@ function ns.getPrimaryBindingCommand()
 	return bindingCommand
 end
 
-local function buildMacro()
+local function buildClassMacro()
 	if not db or not db.enabled then return "" end
 
 	local _, classFile = UnitClass("player")
@@ -155,7 +155,28 @@ local function buildMacro()
 	return ""
 end
 
+local function buildMacro()
+	local classMacro = buildClassMacro()
+	if not db or not db.enabled or not db.walk_on_air_while_falling or InCombatLockdown()
+		or type(IsFalling) ~= "function" or not IsFalling() then return classMacro end
+	local walkOnAir = getSpellNameIfKnown(1259416)
+	if not walkOnAir then return classMacro end
+	-- This may remain installed when combat starts. The secure conditions skip
+	-- the racial and retain the original class action without rewriting buttons.
+	local macro = "/cast [nocombat] !"..walkOnAir.."\n/stopmacro [nocombat]"
+	return classMacro ~= "" and macro.."\n"..classMacro or macro
+end
+
 ns.getMacro = buildMacro
+
+local function refreshPrimaryMacro()
+	if not speedButton or InCombatLockdown() then return end
+	local macro = buildMacro()
+	if speedButton:GetAttribute("macrotext") ~= macro then speedButton:SetAttribute("macrotext", macro) end
+	if floatingButton and floatingButton:GetAttribute("macrotext") ~= macro then
+		floatingButton:SetAttribute("macrotext", macro)
+	end
+end
 
 local function applyFloatingButtonPosition()
 	if not floatingButton or not db then return end
@@ -214,6 +235,7 @@ local function createFloatingButton()
 	floatingButton:SetAttribute("type", "macro")
 	floatingButton:SetAttribute("macrotext", "")
 	floatingButton:SetAttribute("shift-type1", "")
+	floatingButton:HookScript("PreClick", refreshPrimaryMacro)
 	local frameName = floatingButton:GetName()
 	local icon = _G[frameName.."Icon"]
 	if not icon then
@@ -275,8 +297,7 @@ function ns.refreshSpeedButton()
 		return
 	end
 	pendingRefresh = nil
-	local macroText = buildMacro()
-	speedButton:SetAttribute("macrotext", macroText)
+	refreshPrimaryMacro()
 	for _, spec in ipairs(utilityActions) do
 		local utilityButton = utilityButtons[spec.id]
 		if utilityButton then
@@ -285,7 +306,6 @@ function ns.refreshSpeedButton()
 		end
 	end
 	if floatingButton then
-		floatingButton:SetAttribute("macrotext", macroText)
 		floatingButton:SetShown(not not db.show_floating_button)
 	end
 	if ns.refreshOptions then
@@ -372,11 +392,15 @@ core:SetScript("OnEvent", function(_, event, ...)
 		if db.shaman_use_ghost_wolf == nil then
 			db.shaman_use_ghost_wolf = true
 		end
+		if type(db.walk_on_air_while_falling) ~= "boolean" then
+			db.walk_on_air_while_falling = false
+		end
 
 		speedButton = CreateFrame("Button", buttonName, UIParent, "SecureActionButtonTemplate")
 		speedButton:RegisterForClicks("AnyUp", "AnyDown")
 		speedButton:SetAttribute("type", "macro")
 		speedButton:SetAttribute("macrotext", "")
+		speedButton:HookScript("PreClick", refreshPrimaryMacro)
 		speedButton:Hide()
 		for _, spec in ipairs(utilityActions) do
 			local utilityButton = CreateFrame("Button", buttonName.."_"..spec.id, UIParent, "SecureActionButtonTemplate")

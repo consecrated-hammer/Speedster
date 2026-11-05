@@ -51,6 +51,13 @@ Shift-drag the floating button to move it.
 
 - **Use Travel Form outdoors** (druids) is on the Speed page. Turn it off and the macro sticks to Aquatic Form in water and Cat Form everywhere else.
 - **Use Ghost Wolf** (shamans) is on the Speed page too, if you'd rather not have it on your key.
+- **Walk on Air while falling** is available on the Speed page once you know the
+  Skyborne racial. It starts off. Enable it to use Walk on Air from your normal
+  speed key or floating button while falling outside combat. Otherwise the key
+  keeps its normal class movement action. Your separate Walk on Air key remains
+  available, including in combat. Falling alone never casts the spell.
+  While falling outside combat, a failed Walk on Air cast (including cooldown)
+  does not fall back to a class spell on that same press.
 
 ## Limits
 

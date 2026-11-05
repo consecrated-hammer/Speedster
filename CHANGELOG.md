@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-05
+
+### Added
+
+- Optional Walk on Air on the normal speed key and floating button while
+  falling outside combat. Enable it on the Speed page; it starts off and
+  keeps the separate racial binding and normal class movement in combat.
+
 ## [1.0.1] - 2026-10-28
 
 ### Changed

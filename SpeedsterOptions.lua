@@ -126,6 +126,16 @@ HC.Settings:NewPage({ name = "Speed", description = "One key for the fastest way
 		end
 	end
 
+	_, y = UI.Header(panel, "Racial", y)
+	local racial
+	racial, y = UI.Check(panel, "Walk on Air while falling", "Requires Walk on Air. Use the normal speed key for it while falling outside combat. Your separate Walk on Air key still works.", y,
+		function() return db().walk_on_air_while_falling end,
+		function(value) db().walk_on_air_while_falling = value; ns.refreshSpeedButton() end)
+	UI.OnRefresh(panel, function()
+		-- Recheck after spellbook load; an existing opt-in can always be disabled.
+		UI.SetEnabled(racial.hcCheckbox, ns.isSpellKnownSafe(1259416) or db().walk_on_air_while_falling)
+	end)
+
 	local divider = T.Fill(panel:CreateTexture(nil, "ARTWORK"), "edge")
 	divider:SetHeight(1)
 	divider:SetPoint("TOPLEFT", UI.PAD, y - 2)
