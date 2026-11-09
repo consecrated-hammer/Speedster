@@ -42,6 +42,8 @@ Speedster builds a movement macro for your class from the spells you know, and p
 | `/speedster macro` | Print the current speed macro |
 | `/speedster toggle` | Show or hide the floating button |
 | `/speedster reset position` | Move the floating button back |
+| `/speedster whatsnew` | Show what's new in recent releases |
+| `/speedster whatsnew reset` | Bring back the What's new popup and "!" (for testing) |
 
 Every Consecrated Hammer addon also has `help`, `version`, `about`, `debug`, `startup`, `minimap`, `reset settings` and `quiz`.
 

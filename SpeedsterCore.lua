@@ -359,6 +359,27 @@ function ns.bindActionKey(command, keyText)
 	return true, key
 end
 
+-- Clears every key bound to command.
+function ns.unbindAction(command)
+	if InCombatLockdown() then
+		return false, SPELL_FAILED_AFFECTING_COMBAT
+	end
+	local cleared = false
+	local key = GetBindingKey(command)
+	while key do
+		SetBinding(key, nil)
+		cleared = true
+		local nextKey = GetBindingKey(command)
+		if nextKey == key then break end
+		key = nextKey
+	end
+	if cleared then
+		SaveBindings(GetCurrentBindingSet())
+		if ns.refreshOptions then ns.refreshOptions() end
+	end
+	return true
+end
+
 function ns.bindKey(keyText)
 	return ns.bindActionKey(bindingCommand, keyText)
 end

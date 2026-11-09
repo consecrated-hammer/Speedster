@@ -1,6 +1,42 @@
 # Changelog
 
-## [Unreleased]
+## [1.2.0] - 2026-11-09
+
+### Added
+
+- **A fresh coat of paint.** Settings have a new look, with a Window scale
+  slider, Reload UI in the footer and links to the CurseForge page, Discord
+  and Buy me a coffee (hide those on Visibility).
+- **Key bindings, the easy way.** The Key Bindings page now matches the rest
+  of the suite: click the speed macro or a movement action, press a key,
+  mouse button or wheel, and it's listed on the left with an x to remove it.
+
+- **What's new.** After an update with something worth knowing, a small
+  window lists the highlights once, along with news from any other
+  Consecrated Hammer addons you use. Reopen it with `/speedster whatsnew` or
+  from About, or turn it off with **Show what's new after updates** on
+  Visibility. It stays quiet on a fresh install and waits until you're out of
+  combat.
+- **What's new page.** Every release's highlights also live in settings,
+  under REFERENCE, back to the first WoW Forever build, one card per release.
+  A yellow "!" beside it means there's something you haven't read yet, and
+  opening the page hands it in, quest turn-in sound and all. **Mark unread
+  What's new** and **Turn-in sound** on Visibility turn those off.
+
+### Changed
+
+- **Little icons on the Speed page.** Each section now wears its own: a note
+  for the speed macro, Travel Form or Ghost Wolf for your class, Walk on Air
+  for Skyborne and Speedster's logo for the floating button.
+- **Racial settings only for races that have one.** Everyone else no longer
+  stares at a Walk on Air switch they can never turn on.
+- **Druids without Travel Form** get a gentle note on the Speed page instead
+  of a mystery greyed-out switch. Cat Form is quick, but it's no stag.
+- Clicking a support link shows the whole address, with an icon for where
+  it's going.
+- Updated the shared Consecrated Hammer library. The lore quiz has a much
+  bigger question bank, and the minimap button's first click after a drag
+  works again.
 
 ## [1.1.0] - 2026-11-05
 

@@ -25,6 +25,40 @@ local function setFloating(shown)
 	HC.Print("floating button " .. (shown and "shown" or "hidden"))
 end
 
+-- Highlights for HammerCore's What's new window, newest first. Every
+-- CurseForge release gets an entry, fixes included (Kevin, 2026-11-09);
+-- HammerCore's tools/whatsnew_check.py fails the release without one. A
+-- `page` adds a button that opens that settings page.
+local WHATS_NEW = {
+	{ version = "1.2.0", items = {
+		{ title = "What's new", text = "This window, shown once after an update, with news from any other Consecrated Hammer addons you use. Reopen it with /speedster whatsnew or from the What's new page.",
+			page = "Visibility" },
+		{ title = "A fresh coat of paint", text = "Settings got a new look: tabs, two columns, switches, and a What's new page with every release.",
+			kind = "improved" },
+		{ title = "Key bindings", text = "Your speed key and extra movement actions share one tidy bindings page.",
+			kind = "improved", page = "Key Bindings" },
+		{ title = "Support links", text = "Discord and Buy me a coffee sit at the bottom of the settings window. Hide them on Visibility.",
+			kind = "improved", page = "Visibility" },
+		{ title = "Speed page icons", text = "Each section has its own icon, and racial settings only show for races that have one.",
+			kind = "improved", page = "Speed" },
+	} },
+	{ version = "1.1.0", date = "2026-11-05", items = {
+		{ title = "Walk on Air", text = "Your normal speed key and floating button can cast it while you're falling outside combat. Off until you turn it on.",
+			page = "Speed" },
+	} },
+	-- History: written after the fact for releases from before What's new.
+	{ version = "1.0.0", date = "2026-10-28", history = true, items = {
+		"Speedster is now a WoW Forever addon, and the licence links work.",
+	} },
+	{ version = "0.5.0", date = "2026-09-26", history = true, items = {
+		"A lore quiz: the quest marker on the About page, or /speedster quiz.",
+		"The same core commands and settings layout as every Consecrated Hammer addon.",
+	} },
+	{ version = "0.4.1", date = "2026-09-18", history = true, items = {
+		{ text = "WoW Forever support: one key for the fastest way to move.", page = "Speed" },
+	} },
+}
+
 HC:Init({
 	name = "Speedster",
 	command = "speedster",
@@ -54,6 +88,7 @@ HC:Init({
 		}, "\n")
 	end,
 	diagnostics = function() return ns.BuildDiagnosticReport() end,
+	whatsNew = WHATS_NEW,
 	about = {
 		note = "TRAVEL ADVISORY",
 		tips = tips,

@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Speedster (WoW Forever)
 ## Author: consecrated-hammer
-## Version: 1.1.0
-## X-ReleaseDate: 2026-11-05
+## Version: 1.2.0
+## X-ReleaseDate: 2026-11-09
 ## IconTexture: Interface\AddOns\Speedster\textures\Speedster.tga
 ## Notes: WoW Forever (Camelot) build using Speedster's Mainline backend.
 ## AllowLoadGameType: camelot

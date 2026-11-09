@@ -8,9 +8,9 @@ local function equal(actual, expected, label)
 end
 
 local bindings, movement
-local function loadAddon(tocName, saved, class, knownSpells)
+local function loadAddon(tocName, saved, class, knownSpells, version)
     local camelot = tocName:find("Camelot") and "Camelot" or nil
-    wow.Install({ Speedster = { Version = "0.4.11-dev1", ["X-Speedster-Target"] = camelot } })
+    wow.Install({ Speedster = { Version = version or "0.4.11-dev1", ["X-Speedster-Target"] = camelot } })
     bindings = {}
     movement = { falling = false, combat = false }
     IsFalling = function() return movement.falling end
@@ -63,7 +63,7 @@ for _, toc in ipairs({ "Speedster_Camelot.toc" }) do
     equal(HC.Settings:IsShown(), true, toc .. ": the bare command opens settings")
     local names = {}
     for _, spec in ipairs(HC.Settings.order) do names[#names + 1] = spec.name end
-    equal(table.concat(names, ","), "Speed,Visibility,Key Bindings,Commands,Troubleshooting,About",
+    equal(table.concat(names, ","), "Speed,Visibility,Key Bindings,What's new,Commands,Troubleshooting,About",
         toc .. ": rail order")
     local failures = {}
     for name, err in pairs(HC.Settings.errors) do failures[#failures + 1] = name .. ": " .. err end
@@ -78,6 +78,16 @@ for _, toc in ipairs({ "Speedster_Camelot.toc" }) do
     SlashCmdList.SPEEDSTER("bind F")
     equal(bindings.F, "CLICK Speedster_SpeedButton:LeftButton", toc .. ": bind sets the speed key")
     equal(wow.LastPrint(), "Speedster: bound speed macro to F", toc .. ": and says so")
+
+    -- Key Bindings uses HammerCore's shared page: bound actions on the left.
+    HC.Settings:Show("Key Bindings")
+    assert(wow.FindText("Active bindings (1)"), toc .. ": the bound speed key is listed")
+    assert(wow.FindText("Speed macro"), toc .. ": the speed macro is in the pool")
+    equal(ns.unbindAction("CLICK Speedster_SpeedButton:LeftButton"), true, toc .. ": unbind succeeds")
+    equal(bindings.F, nil, toc .. ": unbind clears the key")
+    HC.Settings:Show("Key Bindings")
+    assert(wow.FindText("Active bindings (0)"), toc .. ": the list empties")
+    SlashCmdList.SPEEDSTER("bind F")
     SlashCmdList.SPEEDSTER("toggle")
     equal(ns.db.show_floating_button, false, toc .. ": toggle hides the floating button")
     SlashCmdList.SPEEDSTER("toggle")
@@ -169,16 +179,38 @@ do
     equal(ns.getMacro(), "/cast !Spell 768", "unknown racial keeps normal class movement")
     ns.HammerCore.Settings:Show("Speed")
     equal(wow.FindText("Walk on Air while falling").parent.enabled, true, "saved opt-in can be turned off even if racial is unavailable")
-    local learned = { [768] = true }
-    ns = loadAddon("Speedster_Camelot.toc", nil, "DRUID", learned)
+    assert(wow.FindText("Not learned yet. Cat Form is quick, but it's no stag. Your trainer has the antlers when you're ready."),
+        "a druid without Travel Form is told so on the page")
+    ns = loadAddon("Speedster_Camelot.toc", nil, "DRUID", { [768] = true })
     ns.HammerCore.Settings:Show("Speed")
-    equal(wow.FindText("Walk on Air while falling").parent.enabled, false, "unknown racial keeps new option disabled")
-    learned[1259416] = true
-    ns.core.scripts.OnEvent(ns.core, "SPELLS_CHANGED")
-    equal(wow.FindText("Walk on Air while falling").parent.enabled, true, "spellbook refresh makes existing checkbox available")
+    equal(wow.FindText("Walk on Air while falling"), nil, "other races don't see the Racial section")
+    ns = loadAddon("Speedster_Camelot.toc", nil, "DRUID", { [768] = true, [1259416] = true })
+    ns.HammerCore.Settings:Show("Speed")
+    equal(wow.FindText("Walk on Air while falling").parent.enabled, true, "Skyborne see Walk on Air")
     ns = loadAddon("Speedster_Camelot.toc", { enabled = true, walk_on_air_while_falling = true }, "PRIEST", { [1259416] = true })
     movement.falling = true
     equal(ns.getMacro(), "/cast [nocombat] !Spell 1259416\n/stopmacro [nocombat]", "racial works for a class with no primary speed spell")
+end
+
+-- What's new: an existing profile from before the window existed sees this
+-- release's highlights once; a fresh install stays quiet.
+do
+    local saved = { enabled = true, hammerCore = { startupMessage = false } }
+    local ns = loadAddon("Speedster_Camelot.toc", saved, "DRUID", nil, "1.2.0-dev1")
+    local HC = ns.HammerCore
+    local W = HC.WhatsNew
+    assert(W.eventFrame, "an update schedules What's new")
+    C_Timer.After = function(_, fn) fn() end
+    W.eventFrame.scripts.OnEvent(W.eventFrame, "PLAYER_ENTERING_WORLD")
+    equal(W.frame ~= nil and W.frame.shown, true, "What's new shows after the update")
+    assert(wow.FindText("Speedster 1.2.0"), "it lists 1.2.0")
+    assert(wow.FindButton("Open Visibility"), "a button opens Visibility")
+    equal(saved.hammerCore.whatsNewSeen, "1.2.0", "showing records the version")
+    assert(HC.Commands.byName.whatsnew, "/speedster whatsnew is registered")
+
+    local fresh = {}
+    ns = loadAddon("Speedster_Camelot.toc", fresh, "DRUID", nil, "1.2.0-dev1")
+    equal(ns.HammerCore.WhatsNew.eventFrame, nil, "a fresh install stays quiet")
 end
 
 io.write("Speedster addon tests passed\n")
