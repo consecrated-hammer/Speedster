@@ -135,6 +135,9 @@ HC.spec.visibility = function(panel, y)
 	_, y = UI.Check(panel, "Show floating button", "A clickable speed button on screen. Shift-drag to move it.", y,
 		function() return ns.db.show_floating_button end,
 		function(value) ns.db.show_floating_button = value; ns.refreshSpeedButton() end)
+	_, y = UI.Check(panel, "Hide on flights", "Hide the floating button from takeoff to landing.", y,
+		function() return ns.db.hide_on_flights end,
+		function(value) ns.db.hide_on_flights = value; ns.refreshSpeedButton() end)
 	_, y = UI.ActionButton(panel, y, "Reset button position",
 		function() HC.Commands:Dispatch("reset position") end,
 		"Move the floating button back to the centre of the screen.", nil, 200)

@@ -2,7 +2,7 @@ local addon, ns = ...
 local HC = ns.HammerCore
 
 -- Declares Speedster to HammerCore: commands, the floating-button verbs,
--- the minimap right-click, status, diagnostics and About.
+-- the minimap menu, flights, status, diagnostics and About.
 
 local tips = {
 	"Gotta go fast. Responsibly.",
@@ -22,7 +22,31 @@ local tips = {
 local function setFloating(shown)
 	ns.db.show_floating_button = shown
 	ns.refreshSpeedButton()
-	HC.Print("floating button " .. (shown and "shown" or "hidden"))
+	if shown and ns.hiddenForFlight() then
+		HC.Print("floating button shown after you land")
+	else
+		HC.Print("floating button " .. (shown and "shown" or "hidden"))
+	end
+end
+
+local function resetPosition()
+	local ok, reason = ns.resetFloatingButtonPosition()
+	if not ok and reason then HC.Print(reason) end
+end
+
+-- The minimap right-click menu, after HammerCore's own settings item.
+local function menuItems()
+	local db = ns.db or {}
+	return {
+		{ text = "Speed macro", checked = db.enabled and true or false, func = function()
+			db.enabled = not db.enabled
+			ns.refreshSpeedButton()
+			HC.Print("speed macro " .. (db.enabled and "on" or "off"))
+		end },
+		{ text = "Show floating button", checked = db.show_floating_button and true or false,
+			func = function() setFloating(not db.show_floating_button) end },
+		{ text = "Reset button position", func = resetPosition },
+	}
 end
 
 -- Highlights for HammerCore's What's new window, newest first. Every
@@ -30,6 +54,14 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
+	{ version = "1.3.0", date = "2026-11-10", items = {
+		{ title = "Hide on flights", text = "The floating button gets out of the way while you're on a flight path and comes back when you land. Turn it off on Visibility.",
+			page = "Visibility" },
+		{ title = "Minimap menu", text = "Right-click the minimap button for settings, the speed macro, the floating button and its position.",
+			kind = "improved" },
+		{ title = "Settings search", text = "Type in the box at the top of settings to jump straight to any setting.",
+			kind = "improved" },
+	} },
 	{ version = "1.2.0", items = {
 		{ title = "What's new", text = "This window, shown once after an update, with news from any other Consecrated Hammer addons you use. Reopen it with /speedster whatsnew or from the What's new page.",
 			page = "Visibility" },
@@ -71,20 +103,16 @@ HC:Init({
 		minimapAngle = "minimap_angle",
 	},
 	clientLabel = function() return "WoW Forever" end,
-	minimap = {
-		rightClick = function() setFloating(not ns.db.show_floating_button) end,
-		rightClickLabel = "show or hide the floating button",
-	},
+	minimap = { menu = menuItems },
+	-- Takeoff and landing only, for Hide on flights; no flight times.
+	flights = { estimates = false },
 	toggle = { help = "Show or hide the floating button", run = function() setFloating(not ns.db.show_floating_button) end },
-	resetPosition = function()
-		local ok, reason = ns.resetFloatingButtonPosition()
-		if not ok and reason then HC.Print(reason) end
-	end,
+	resetPosition = resetPosition,
 	status = function()
 		return table.concat({
 			"Speed macro: " .. (ns.db.enabled and "on" or "off"),
 			"Key: " .. ns.getBindingText(),
-			"Floating button: " .. (ns.db.show_floating_button and "shown" or "hidden"),
+			"Floating button: " .. (ns.db.show_floating_button and (ns.hiddenForFlight() and "hidden for the flight" or "shown") or "hidden"),
 		}, "\n")
 	end,
 	diagnostics = function() return ns.BuildDiagnosticReport() end,
@@ -95,6 +123,9 @@ HC:Init({
 		action = "Hurry up",
 	},
 })
+
+HC.Flights:OnTakeoff(function() ns.setOnFlight(true) end)
+HC.Flights:OnLanding(function() ns.setOnFlight(false) end)
 
 HC.Commands:Add({ name = "bind", args = "[key]", section = "Speed", help = "Bind the speed macro (default NUMPADMINUS)",
 	run = function(args)

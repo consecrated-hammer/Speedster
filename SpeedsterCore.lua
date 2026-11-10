@@ -32,6 +32,7 @@ local floatingButton
 local utilityButtons = {}
 local pendingRefresh
 local pendingFloatingReset
+local onFlight
 local FLOATING_BUTTON_SIZE = 36
 local ICON_PATH = "Interface\\AddOns\\Speedster\\textures\\Speedster.tga"
 local FALLBACK_ICON_PATH = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -290,6 +291,19 @@ local function createFloatingButton()
 	applyFloatingButtonPosition()
 end
 
+-- True while Hide on flights is keeping a shown floating button out of
+-- the way between takeoff and landing.
+function ns.hiddenForFlight()
+	return onFlight and db and db.hide_on_flights and db.show_floating_button and true or false
+end
+
+-- HammerCore's takeoff and landing callbacks. The button is secure, so a
+-- change in combat waits for PLAYER_REGEN_ENABLED like any other refresh.
+function ns.setOnFlight(flying)
+	onFlight = flying and true or nil
+	ns.refreshSpeedButton()
+end
+
 function ns.refreshSpeedButton()
 	if not speedButton then return end
 	if InCombatLockdown() then
@@ -306,7 +320,7 @@ function ns.refreshSpeedButton()
 		end
 	end
 	if floatingButton then
-		floatingButton:SetShown(not not db.show_floating_button)
+		floatingButton:SetShown(db.show_floating_button and not ns.hiddenForFlight() or false)
 	end
 	if ns.refreshOptions then
 		ns.refreshOptions()
@@ -412,6 +426,9 @@ core:SetScript("OnEvent", function(_, event, ...)
 		db.cancel_form_on_taxi = nil
 		if db.shaman_use_ghost_wolf == nil then
 			db.shaman_use_ghost_wolf = true
+		end
+		if type(db.hide_on_flights) ~= "boolean" then
+			db.hide_on_flights = true
 		end
 		if type(db.walk_on_air_while_falling) ~= "boolean" then
 			db.walk_on_air_while_falling = false

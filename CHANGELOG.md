@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.3.0] - 2026-11-10
+
+### Added
+
+- **Hide on flights.** The floating button now ducks out of sight while
+  you're on a flight path and pops back when you land. The gryphon knows
+  the way; you don't need a speed button up there. It's on by default, and
+  **Hide on flights** on Visibility turns it off.
+- **Settings search.** A search box at the top of the settings window finds
+  any setting and takes you straight to it.
+
+### Changed
+
+- **Minimap right-click opens a menu.** Settings, a speed macro switch, the
+  floating button and Reset button position, all in one place. Rather it
+  opened settings? Set **Minimap right-click** on Visibility. It used to
+  show or hide the floating button, which is now in the menu.
+- **Reload UI only when it's needed.** The standing button in the settings
+  footer is gone. Nothing in Speedster needs a reload anyway.
+- Updated the shared Consecrated Hammer library.
+
 ## [1.2.0] - 2026-11-09
 
 ### Added

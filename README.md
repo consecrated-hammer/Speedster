@@ -49,6 +49,8 @@ Every Consecrated Hammer addon also has `help`, `version`, `about`, `debug`, `st
 
 Shift-drag the floating button to move it.
 
+Right-click the minimap button for a quick menu: settings, the speed macro on or off, the floating button and **Reset button position**. **Minimap right-click** on Visibility makes it open settings instead.
+
 ## Settings worth knowing
 
 - **Use Travel Form outdoors** (druids) is on the Speed page. Turn it off and the macro sticks to Aquatic Form in water and Cat Form everywhere else.
@@ -60,6 +62,9 @@ Shift-drag the floating button to move it.
   available, including in combat. Falling alone never casts the spell.
   While falling outside combat, a failed Walk on Air cast (including cooldown)
   does not fall back to a class spell on that same press.
+
+- **Hide on flights** is on the Visibility page and starts on. The floating button hides from takeoff to landing on a flight path, then comes back.
+- Lost a setting? Type in the search box at the top of the settings window.
 
 ## Limits
 

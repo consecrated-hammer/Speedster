@@ -34,6 +34,8 @@ function ns.BuildDiagnosticReport()
         "Minimap point: " .. framePoint(minimap),
         "Floating button shown: " .. yesNo(db.show_floating_button),
         "Floating button point: " .. framePoint(floating),
+        "Hide on flights: " .. yesNo(db.hide_on_flights),
+        "Hidden for flight: " .. yesNo(ns.hiddenForFlight and ns.hiddenForFlight()),
         "Combat lockdown: " .. yesNo(InCombatLockdown and InCombatLockdown()),
         "Report privacy: no character name or macro text included; configured keybindings are included.",
     }
