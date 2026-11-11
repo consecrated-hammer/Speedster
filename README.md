@@ -1,8 +1,6 @@
 # Speedster
 
-**One key for the fastest way to get around.**
-
-_Go zoom-zoom!_
+**One key for the fastest way to get around.**<br>_Go zoom-zoom!_
 
 [![WoW Forever](https://img.shields.io/badge/wow%20forever-supported-4c9a7a?style=flat-square)](https://www.curseforge.com/wow/addons/speedster) [![Release](https://img.shields.io/github/v/release/consecrated-hammer/Speedster?style=flat-square&color=4c9a7a&label=release)](https://github.com/consecrated-hammer/Speedster/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-4c9a7a?style=flat-square)](https://github.com/consecrated-hammer/Speedster/blob/main/LICENSE.txt)
 
