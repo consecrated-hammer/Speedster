@@ -22,7 +22,7 @@ for _, toc in ipairs(S.TOCS) do
                 equal(HC.Settings.selected, spec.name, label .. ": " .. spec.name .. " opens")
             end
             HC.Settings:Show("Speed")
-            equal(S.switch("Enable speed macro") ~= nil, true, label .. ": speed macro switch")
+            equal(S.switch("Enable speed key") ~= nil, true, label .. ": speed macro switch")
             equal(S.switch("Use Travel Form outdoors") ~= nil, class == "DRUID", label .. ": Travel Form only for druids")
             equal(S.switch("Use Ghost Wolf") ~= nil, class == "SHAMAN", label .. ": Ghost Wolf only for shamans")
         end
@@ -66,10 +66,10 @@ for _, toc in ipairs(S.TOCS) do
     equal(S.primary():GetAttribute("macrotext"), "", toc .. ": no Travel Form and no Cat Form means no macro")
     assert(wow.FindText("No speed macro yet for this class and level. Learn a supported spell or check your movement preferences."), toc .. ": Current macro says so")
     wow.Click(S.switch("Use Travel Form outdoors"))
-    wow.Click(S.switch("Enable speed macro"))
-    equal(ns.db.enabled, false, toc .. ": Enable speed macro off")
+    wow.Click(S.switch("Enable speed key"))
+    equal(ns.db.enabled, false, toc .. ": Enable speed key off")
     equal(S.primary():GetAttribute("macrotext"), "", toc .. ": empties the key")
-    wow.Click(S.switch("Enable speed macro"))
+    wow.Click(S.switch("Enable speed key"))
     equal(S.primary():GetAttribute("macrotext"), "/cast [flyable,nocombat]!Spell 783;!Spell 783", toc .. ": and refills it")
 
     -- Settings search finds Speedster's rows and jumps to them.
@@ -91,7 +91,7 @@ for _, toc in ipairs(S.TOCS) do
     -- Troubleshooting shows Speedster's status card.
     HC.Settings:Show("Troubleshooting")
     local status = HC.spec.status()
-    equal(status, "Speed macro: on\nKey: Not bound\nFloating button: shown", toc .. ": status card")
+    equal(status, "Speed key: on\nKey: Not bound\nFloating button: shown", toc .. ": status card")
 end
 
 io.write("Speedster settings tests passed\n")

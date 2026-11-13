@@ -44,7 +44,7 @@ for _, toc in ipairs(S.TOCS) do
     equal(primary:GetAttribute("type"), "macro", toc .. ": which runs a macro")
     equal(primary.shown, false, toc .. ": the key's button is invisible")
     equal(_G.BINDING_HEADER_SPEEDSTER, "Speedster", toc .. ": key bindings header")
-    equal(_G["BINDING_NAME_CLICK Speedster_SpeedButton:LeftButton"], "Use speed macro", toc .. ": speed key name")
+    equal(_G["BINDING_NAME_CLICK Speedster_SpeedButton:LeftButton"], "Use speed key", toc .. ": speed key name")
     for _, id in ipairs(ns.getUtilityActionIDs()) do
         local name = "Speedster_SpeedButton_" .. id
         assert(_G[name], toc .. ": " .. id .. " has a button")

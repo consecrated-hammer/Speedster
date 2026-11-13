@@ -11,7 +11,7 @@ local tips = {
 	"Aspect of the Pack: excellent for travel, terrible for friendships.",
 	"Slow Fall: the art of arriving late but alive.",
 	"Every second saved is a second spent waiting for the tank anyway.",
-	"Speed macro armed. Destination: probably the flight master.",
+	"Speed key armed. Destination: probably the flight master.",
 	"Escape Artist: for gnomes who have simply had enough.",
 	"Travel Form outdoors, cat form indoors, dignity optional.",
 	"Water Walking: technically a shortcut. Legally a grey area.",
@@ -38,10 +38,10 @@ end
 local function menuItems()
 	local db = ns.db or {}
 	return {
-		{ text = "Speed macro", checked = db.enabled and true or false, func = function()
+		{ text = "Speed key", checked = db.enabled and true or false, func = function()
 			db.enabled = not db.enabled
 			ns.refreshSpeedButton()
-			HC.Print("speed macro " .. (db.enabled and "on" or "off"))
+			HC.Print("speed key " .. (db.enabled and "on" or "off"))
 		end },
 		{ text = "Show floating button", checked = db.show_floating_button and true or false,
 			func = function() setFloating(not db.show_floating_button) end },
@@ -55,14 +55,14 @@ end
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
     { version = "1.3.0-dev1", date = "2026-11-13", items = {
-        { title = "Find your speed key", text = "Key Bindings is second in the rail. Choose Speed macro for your main key; optional utility actions have separate keys. Conflicts now offer Replace before taking a key.", page = "Key Bindings" },
+        { title = "Find your speed key", text = "Key Bindings is second in the rail. Choose Speed key for your main key; optional utility actions have separate keys. Conflicts now offer Replace before taking a key.", page = "Key Bindings" },
         { title = "Clearer movement settings", text = "Speed explains your class choices and shows a read-only generated macro. Search finds available preferences and individual binding actions, even after learning spells.", page = "Speed" },
         { title = "Floating button", text = "Visibility keeps the floating button, flight hiding and position reset together. Reset button position keeps your other settings and bindings.", page = "Visibility" },
     } },
 	{ version = "1.3.0", date = "2026-11-10", items = {
 		{ title = "Hide on flights", text = "The floating button gets out of the way while you're on a flight path and comes back when you land. Turn it off on Visibility.",
 			page = "Visibility" },
-		{ title = "Minimap menu", text = "Right-click the minimap button for settings, the speed macro, the floating button and its position.",
+		{ title = "Minimap menu", text = "Right-click the minimap button for settings, the speed key, the floating button and its position.",
 			kind = "improved" },
 		{ title = "Settings search", text = "Type in the box at the top of settings to jump straight to any setting.",
 			kind = "improved" },
@@ -115,7 +115,7 @@ HC:Init({
 	resetPosition = resetPosition,
 	status = function()
 		return table.concat({
-			"Speed macro: " .. (ns.db.enabled and "on" or "off"),
+			"Speed key: " .. (ns.db.enabled and "on" or "off"),
 			"Key: " .. ns.getBindingText(),
 			"Floating button: " .. (ns.db.show_floating_button and (ns.hiddenForFlight() and "hidden for the flight" or "shown") or "hidden"),
 		}, "\n")
@@ -132,11 +132,11 @@ HC:Init({
 HC.Flights:OnTakeoff(function() ns.setOnFlight(true) end)
 HC.Flights:OnLanding(function() ns.setOnFlight(false) end)
 
-HC.Commands:Add({ name = "bind", args = "[key]", section = "Speed", help = "Bind the speed macro (default NUMPADMINUS)",
+HC.Commands:Add({ name = "bind", args = "[key]", section = "Speed", help = "Bind the speed key (default NUMPADMINUS)",
 	run = function(args)
 		local ok, result = ns.bindKey(args)
 		if ok then
-			HC.Print(("bound speed macro to %s"):format(GetBindingText(result, "KEY_") or result))
+			HC.Print(("bound speed key to %s"):format(GetBindingText(result, "KEY_") or result))
 		else
 			HC.Print(result)
 		end
@@ -149,5 +149,5 @@ HC.Commands:Add({ name = "macro", section = "Speed", help = "Print the current s
 		for line in macro:gmatch("[^\n]+") do print(line) end
 	end })
 HC.Commands:AddAction({ section = "Speed", usage = "Press your speed key", help = "Use the fastest known movement" })
-HC.Commands:AddAction({ section = "Speed", usage = "Click the floating button", help = "Use the speed macro" })
+HC.Commands:AddAction({ section = "Speed", usage = "Click the floating button", help = "Use the speed key" })
 HC.Commands:AddAction({ section = "Speed", usage = "Shift-drag the floating button", help = "Move it" })

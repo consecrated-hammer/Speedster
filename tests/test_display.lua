@@ -76,7 +76,7 @@ do
     SlashCmdList.SPEEDSTER("toggle")
     ns.db.enabled = false
     ns.refreshSpeedButton()
-    equal(box:GetText(), "Speed macro disabled. Enable it above to use your speed key.", "turning the macro off updates the box")
+    equal(box:GetText(), "Speed key disabled. Enable it above to use your speed key.", "turning the macro off updates the box")
     ns.db.enabled = true
     ns.refreshSpeedButton()
     equal(box:GetText(), "/cast Spell 2983", "turning it on fills it again")
@@ -97,7 +97,7 @@ do
     GameTooltip.SetText = function(_, text) lines[#lines + 1] = text end
     GameTooltip.AddLine = function(_, text) lines[#lines + 1] = text end
     button.scripts.OnEnter(button)
-    equal(table.concat(lines, "|"), "Speedster|Left-click: use speed macro|Shift + left-drag: move button", "tooltip")
+    equal(table.concat(lines, "|"), "Speedster|Left-click: use speed key|Shift + left-drag: move button", "tooltip")
 
     button.scripts.OnMouseDown(button, "LeftButton")
     equal(button._isDragging, nil, "a plain click doesn't drag")

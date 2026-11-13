@@ -77,12 +77,12 @@ for _, toc in ipairs({ "Speedster_Camelot.toc" }) do
 
     SlashCmdList.SPEEDSTER("bind F")
     equal(bindings.F, "CLICK Speedster_SpeedButton:LeftButton", toc .. ": bind sets the speed key")
-    equal(wow.LastPrint(), "Speedster: bound speed macro to F", toc .. ": and says so")
+    equal(wow.LastPrint(), "Speedster: bound speed key to F", toc .. ": and says so")
 
     -- Key Bindings uses HammerCore's shared page: bound actions on the left.
     HC.Settings:Show("Key Bindings")
     assert(wow.FindText("Active bindings (1)"), toc .. ": the bound speed key is listed")
-    assert(wow.FindText("Speed macro"), toc .. ": the speed macro is in the pool")
+    assert(wow.FindText("Speed key"), toc .. ": the speed macro is in the pool")
     equal(ns.unbindAction("CLICK Speedster_SpeedButton:LeftButton"), true, toc .. ": unbind succeeds")
     equal(bindings.F, nil, toc .. ": unbind clears the key")
     HC.Settings:Show("Key Bindings")
@@ -179,7 +179,7 @@ do
     equal(ns.getMacro(), "/cast !Spell 768", "unknown racial keeps normal class movement")
     ns.HammerCore.Settings:Show("Speed")
     equal(wow.FindText("Walk on Air while falling").parent.enabled, true, "saved opt-in can be turned off even if racial is unavailable")
-    assert(wow.FindText("Not learned yet. Learn the form to enable it here; a saved preference is kept until you change it."),
+    assert(wow.FindText("Not learned yet. Learn the form to enable it here."),
         "a druid without Travel Form is told so on the page")
     ns = loadAddon("Speedster_Camelot.toc", nil, "DRUID", { [768] = true })
     ns.HammerCore.Settings:Show("Speed")

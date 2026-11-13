@@ -16,15 +16,15 @@ ns.core = core
 local buttonName = addon.."_SpeedButton"
 local bindingCommand = "CLICK "..buttonName..":LeftButton"
 local utilityActions = {
-	{ id = "druidDash", label = "Druid: Dash", spellIDs = { 1850 } },
-	{ id = "hunterPack", label = "Hunter: Aspect of the Pack", spellIDs = { 13159 }, warning = "Group travel only: taking damage dazes affected party members." },
-	{ id = "mageSlowFall", label = "Mage: Slow Fall", spellIDs = { 130 }, warning = "Consumes a Light Feather." },
-	{ id = "priestLevitate", label = "Priest: Levitate", spellIDs = { 1706 }, warning = "Consumes a Light Feather." },
-	{ id = "shamanWaterWalking", label = "Shaman: Water Walking", spellIDs = { 546 }, selfCast = true, warning = "Consumes Fish Oil; damage cancels the effect." },
-	{ id = "paladinFreedom", label = "Paladin: Blessing of Freedom", spellIDs = { 1044 }, selfCast = true },
-	{ id = "gnomeEscapeArtist", label = "Gnome: Escape Artist", spellIDs = { 20589 } },
-	{ id = "skyborneWalkOnAir", label = "Skyborne: Walk on Air", spellIDs = { 1259416 } },
-	{ id = "skyborneSkysight", label = "Skyborne: Skysight", spellIDs = { 1259686 } },
+	{ id = "druidDash", label = "Dash", spellIDs = { 1850 } },
+	{ id = "hunterPack", label = "Aspect of the Pack", spellIDs = { 13159 }, warning = "Group travel only: taking damage dazes affected party members." },
+	{ id = "mageSlowFall", label = "Slow Fall", spellIDs = { 130 }, warning = "Consumes a Light Feather." },
+	{ id = "priestLevitate", label = "Levitate", spellIDs = { 1706 }, warning = "Consumes a Light Feather." },
+	{ id = "shamanWaterWalking", label = "Water Walking", spellIDs = { 546 }, selfCast = true, warning = "Consumes Fish Oil; damage cancels the effect." },
+	{ id = "paladinFreedom", label = "Blessing of Freedom", spellIDs = { 1044 }, selfCast = true },
+	{ id = "gnomeEscapeArtist", label = "Escape Artist", spellIDs = { 20589 } },
+	{ id = "skyborneWalkOnAir", label = "Walk on Air", spellIDs = { 1259416 } },
+	{ id = "skyborneSkysight", label = "Skysight", spellIDs = { 1259686 } },
 }
 local db
 local speedButton
@@ -281,7 +281,7 @@ local function createFloatingButton()
 	floatingButton:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 		GameTooltip:SetText("Speedster")
-		GameTooltip:AddLine("Left-click: use speed macro", 0.85, 0.85, 0.85)
+		GameTooltip:AddLine("Left-click: use speed key", 0.85, 0.85, 0.85)
 		GameTooltip:AddLine("Shift + left-drag: move button", 0.85, 0.85, 0.85)
 		GameTooltip:Show()
 	end)
@@ -454,7 +454,7 @@ core:SetScript("OnEvent", function(_, event, ...)
 		ns.HammerCore:Start()
 
 		_G["BINDING_HEADER_SPEEDSTER"] = "Speedster"
-		_G["BINDING_NAME_"..bindingCommand] = "Use speed macro"
+		_G["BINDING_NAME_"..bindingCommand] = "Use speed key"
 
 		ns.refreshSpeedButton()
 	elseif event == "PLAYER_REGEN_ENABLED" then

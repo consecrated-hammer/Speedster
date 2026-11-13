@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Use speed key consistently and shorten movement tooltips and spell names.
+
 ### Changed
 
 - Keep three settings pages, with Key Bindings second and a setup link on Speed. Explain automatic class movement and independent utility keys.

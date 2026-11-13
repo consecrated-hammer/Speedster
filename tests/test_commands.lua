@@ -21,7 +21,7 @@ for _, toc in ipairs(S.TOCS) do
     -- bind.
     SlashCmdList.SPEEDSTER("bind")
     equal(world.bindings.NUMPADMINUS, speedKey, toc .. ": bind with no key uses NUMPADMINUS")
-    equal(wow.LastPrint(), "Speedster: bound speed macro to NUMPADMINUS", toc .. ": and says so")
+    equal(wow.LastPrint(), "Speedster: bound speed key to NUMPADMINUS", toc .. ": and says so")
     SlashCmdList.SPEEDSTER("bind  f ")
     equal(world.bindings.F, speedKey, toc .. ": keys are trimmed and upper-cased")
     equal(world.bindings.NUMPADMINUS, nil, toc .. ": the old key is released")
@@ -69,16 +69,16 @@ for _, toc in ipairs(S.TOCS) do
     equal(HC.Minimap.RightClickLabel(), "menu", toc .. ": tooltip says menu")
     local texts = {}
     for _, item in ipairs(HC.Minimap:MenuItems()) do texts[#texts + 1] = item.separator and "-" or item.text end
-    equal(table.concat(texts, ","), "Speedster settings,-,Speed macro,Show floating button,Reset button position",
+    equal(table.concat(texts, ","), "Speedster settings,-,Speed key,Show floating button,Reset button position",
         toc .. ": menu items")
-    local item = S.menuItem(HC, "Speed macro")
-    equal(item.checked, true, toc .. ": Speed macro is ticked")
+    local item = S.menuItem(HC, "Speed key")
+    equal(item.checked, true, toc .. ": Speed key is ticked")
     item.func()
-    equal(ns.db.enabled, false, toc .. ": Speed macro turns the macro off")
+    equal(ns.db.enabled, false, toc .. ": Speed key turns the macro off")
     equal(S.primary():GetAttribute("macrotext"), "", toc .. ": and empties the key")
-    equal(wow.LastPrint(), "Speedster: speed macro off", toc .. ": and says so")
-    equal(S.menuItem(HC, "Speed macro").checked, false, toc .. ": unticked")
-    S.menuItem(HC, "Speed macro").func()
+    equal(wow.LastPrint(), "Speedster: speed key off", toc .. ": and says so")
+    equal(S.menuItem(HC, "Speed key").checked, false, toc .. ": unticked")
+    S.menuItem(HC, "Speed key").func()
     equal(S.primary():GetAttribute("macrotext"), "/cast Spell 2983", toc .. ": and back on")
     S.menuItem(HC, "Show floating button").func()
     equal(S.floating():IsShown(), false, toc .. ": Show floating button hides it")

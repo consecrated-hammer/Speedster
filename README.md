@@ -30,7 +30,7 @@ Speedster builds a movement macro for your class from the spells you know, and p
 ## Getting started
 
 1. Install, then type `/speedster` for settings.
-2. On **Key Bindings**, choose **Speed macro** under **Primary speed key**, then press a keyboard key, mouse button or wheel. Shift, Ctrl and Alt combinations work too. Nothing is bound until you choose it.
+2. On **Key Bindings**, choose **Speed key** under **Primary speed key**, then press a keyboard key, mouse button or wheel. Shift, Ctrl and Alt combinations work too. Nothing is bound until you choose it.
 3. On **Speed**, choose any class or racial preferences. The read-only **Current macro** shows what Speedster generates; there's nothing to copy. **Visibility** controls the floating button and minimap.
 
 ## Commands
@@ -38,7 +38,7 @@ Speedster builds a movement macro for your class from the spells you know, and p
 | Command | What it does |
 | --- | --- |
 | `/speedster` | Open settings |
-| `/speedster bind [KEY]` | Bind the speed macro (leave the key blank for `NUMPADMINUS`) |
+| `/speedster bind [KEY]` | Bind the speed key (leave the key blank for `NUMPADMINUS`) |
 | `/speedster macro` | Print the current speed macro |
 | `/speedster toggle` | Show or hide the floating button |
 | `/speedster reset position` | Move the floating button back |
@@ -49,7 +49,7 @@ Every Consecrated Hammer addon also has `help`, `version`, `about`, `debug`, `st
 
 Shift-drag the floating button to move it.
 
-Right-click the minimap button for a quick menu: settings, the speed macro on or off, the floating button and **Reset button position**. **Minimap right-click** on Visibility makes it open settings instead.
+Right-click the minimap button for a quick menu: settings, the speed key on or off, the floating button and **Reset button position**. **Minimap right-click** on Visibility makes it open settings instead.
 
 ## Settings worth knowing
 
@@ -69,7 +69,7 @@ Binding changes are unavailable in combat; movement and floating-button
 changes wait until combat ends.
 
 Class and racial controls hide with the primary macro disabled; search still
-finds available preferences and highlights **Enable speed macro**. A saved
+finds available preferences and highlights **Enable speed key**. A saved
 preference remains available to switch off if spell data is temporarily missing.
 
 

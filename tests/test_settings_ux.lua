@@ -36,7 +36,7 @@ for _, scale in ipairs({ 0.7, 1.3 }) do
                 if match(HC, label, label) then assert(HC.Settings:Focus(spec.name, label), "focus " .. label) end
             end
         end
-        for _, label in ipairs({ "Enable speed macro", "Choose your speed key", "Current macro",
+        for _, label in ipairs({ "Enable speed key", "Choose your speed key", "Current macro",
             "Show floating button", "Hide on flights", "Reset button position", "Show minimap button",
             "Minimap right-click", "Show startup message", "Show what's new after updates",
             "Mark unread What's new", "Turn-in sound", "Settings search", "Show support links", "Window scale", "Copy report" }) do
@@ -75,7 +75,7 @@ do
     spellEvent(ns)
     assert(match(HC, "Use Travel Form outdoors", "Use Travel Form outdoors"), "new form indexed")
     assert(match(HC, "Walk on Air while falling", "Walk on Air while falling"), "new racial indexed")
-    assert(match(HC, "Dash", "Bind: Druid: Dash"), "new utility tile indexed")
+    assert(match(HC, "Dash", "Bind: Dash"), "new utility tile indexed")
     HC.Settings:Show("Speed")
     wow.Click(S.switch("Use Travel Form outdoors"))
     local macro = row(HC, "Speed", "Current macro")
@@ -86,29 +86,29 @@ do
     known[783] = nil
     spellEvent(ns)
     eq(macro:GetText(), ns.getMacro(), "macro refreshed after spell removal")
-    wow.Click(S.switch("Enable speed macro"))
-    eq(HC.Settings:Focus("Speed", "Use Travel Form outdoors"), row(HC, "Speed", "Enable speed macro"), "hidden child focuses enable switch")
-    wow.Click(S.switch("Enable speed macro"))
+    wow.Click(S.switch("Enable speed key"))
+    eq(HC.Settings:Focus("Speed", "Use Travel Form outdoors"), row(HC, "Speed", "Enable speed key"), "hidden child focuses enable switch")
+    wow.Click(S.switch("Enable speed key"))
 
     local command = ns.getPrimaryBindingCommand()
     local dash = "CLICK Speedster_SpeedButton_druidDash:LeftButton"
     world.bindings.F, world.bindings.G = command, command
     world.bindings.H = dash
     ns.refreshOptions()
-    local active = row(HC, "Key Bindings", "Change binding: Speed macro")
+    local active = row(HC, "Key Bindings", "Change binding: Speed key")
     S.contains(active.key:GetText(), "F, G", "all current keys are displayed")
     known[1850] = nil
     spellEvent(ns)
-    eq(match(HC, "Dash", "Bind: Druid: Dash"), nil, "removed spell tile not stale")
-    assert(match(HC, "Dash", "Remove binding: Druid: Dash"), "unavailable saved binding remains removable")
-    wow.Click(row(HC, "Key Bindings", "Remove binding: Druid: Dash"))
+    eq(match(HC, "Dash", "Bind: Dash"), nil, "removed spell tile not stale")
+    assert(match(HC, "Dash", "Remove binding: Dash"), "unavailable saved binding remains removable")
+    wow.Click(row(HC, "Key Bindings", "Remove binding: Dash"))
     eq(world.bindings.H, nil, "unlearned binding removed")
-    eq(match(HC, "Dash", "Remove binding: Druid: Dash"), nil, "removed bound row not stale")
+    eq(match(HC, "Dash", "Remove binding: Dash"), nil, "removed bound row not stale")
 
     -- Drive the real shared capture prompt and conflict replacement.
     local function capture()
         HC.Settings:Show("Key Bindings")
-        wow.Click(row(HC, "Key Bindings", "Bind: Speed macro"))
+        wow.Click(row(HC, "Key Bindings", "Bind: Speed key"))
         return HC.Bindings.Capture.frame
     end
     world.bindings.X = "JUMP"

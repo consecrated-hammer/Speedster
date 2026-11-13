@@ -65,12 +65,12 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     _, sy = UI.Header(setup, "Your speed key", sy, ADDON_ICON)
     _, sy = UI.Text(setup, "Press your speed key or click the floating button to use a known movement spell. Nothing casts automatically.", sy)
     local master
-    master, sy = UI.Check(setup, "Enable speed macro", "Enable the primary speed key and floating-button action. Optional utility keys keep working independently. Changes made in combat apply when combat ends.", sy,
+    master, sy = UI.Check(setup, "Enable speed key", "Turns your speed key and the floating button on or off. Extra keys are separate. Changes in combat apply afterwards.", sy,
         function() return ns.db.enabled end,
         function(v) ns.db.enabled = v; ns.refreshSpeedButton() end)
     local link
     link, sy = UI.PageLink(setup, sy, "Choose your speed key", "Key Bindings")
-    UI.AttachHint(link, "Choose your speed key", "Open Key Bindings to bind the primary Speed macro action. No key is assigned automatically.")
+    UI.AttachHint(link, "Choose your speed key", "Open Key Bindings to bind the primary Speed key action. No key is assigned automatically.")
     UI.RegisterRow(setup, link, "Choose your speed key")
     group.height = -sy + 4
 
@@ -85,7 +85,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     local preferences, cg = add(2, master, function() return ns.db.enabled end)
     local cy = 0
     _, cy = UI.Header(preferences, "Class movement", cy, spellIcon(({ DRUID = 783, SHAMAN = 2645, HUNTER = 5118, ROGUE = 2983, MAGE = 1953 })[class]))
-    _, cy = UI.Text(preferences, classText[class] or "This class has no primary speed spell. Learned utility actions can still have their own keys on Key Bindings.", cy)
+    _, cy = UI.Text(preferences, classText[class] or "Speedster has no speed spell for this class. Any extra keys on Key Bindings still work.", cy)
     if class == "DRUID" or class == "SHAMAN" then
         local key = class == "DRUID" and "druid_use_travel" or "shaman_use_ghost_wolf"
         local function known()
@@ -94,8 +94,8 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
         end
         local row
         row, cy = UI.Check(preferences, class == "DRUID" and "Use Travel Form outdoors" or "Use Ghost Wolf",
-            class == "DRUID" and "Use Travel Form outdoors and Flight Form where allowed. Turn off to keep Aquatic Form in water and Cat Form elsewhere. Requires learned forms; a saved preference can always be turned off."
-                or "Use learned Ghost Wolf on your speed key. Water Walking remains a separate utility action. A saved preference can always be turned off.", cy,
+            class == "DRUID" and "Use Travel Form outdoors and Flight Form where allowed. Turn off to keep Aquatic Form in water and Cat Form elsewhere. Requires learned forms."
+                or "Use learned Ghost Wolf on your speed key. Water Walking remains a separate utility action.", cy,
             function() return ns.db[key] end,
             function(v)
                 if not ns.db.enabled or (not known() and not ns.db[key]) then return end
@@ -107,7 +107,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
         end)
         cy = UI.Flush(preferences, cy)
         local note
-        note, cy = UI.Text(preferences, "Not learned yet. Learn the form to enable it here; a saved preference is kept until you change it.", cy)
+        note, cy = UI.Text(preferences, "Not learned yet. Learn the form to enable it here.", cy)
         UI.OnRefresh(panel, function() note:SetShown(not known()) end)
     end
     cg.height = -UI.Flush(preferences, cy) + 4
@@ -117,7 +117,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     local ry = 0
     _, ry = UI.Header(racial, "Racial movement", ry, function() return spellIcon(1259416) end)
     local racialRow
-    racialRow, ry = UI.Check(racial, "Walk on Air while falling", "Skyborne opt-in: press your normal speed key while falling outside combat. Falling alone never casts. A failed cast does not try your class spell on the same press. Ordinary movement and the separate racial key remain; combat keeps the secure class fallback.", ry,
+    racialRow, ry = UI.Check(racial, "Walk on Air while falling", "While falling out of combat, your speed key casts Walk on Air instead. It never casts on its own.", ry,
         function() return ns.db.walk_on_air_while_falling end,
         function(v)
             if not ns.db.enabled or not racialAvailable() then return end
@@ -143,7 +143,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     macro:SetTextInsets(8, 8, 8, 8)
     T.Surface(macro, "rail", "edge")
     local function macroText()
-        if not ns.db.enabled then return "Speed macro disabled. Enable it above to use your speed key." end
+        if not ns.db.enabled then return "Speed key disabled. Enable it above to use your speed key." end
         local text = ns.getMacro()
         return text ~= "" and text or "No speed macro yet for this class and level. Learn a supported spell or check your movement preferences."
     end
@@ -178,14 +178,14 @@ local function actionItems(includeUnavailable)
     return items
 end
 local function speedItem()
-    return { id = ns.getPrimaryBindingCommand(), name = "Speed macro", icon = ADDON_ICON,
-        detail = "Primary movement key: uses your Speed page preferences and known class spells. Optional utility keys are separate." }
+    return { id = ns.getPrimaryBindingCommand(), name = "Speed key", icon = ADDON_ICON,
+        detail = "Uses your Speed page preferences and known class spells. Extra keys are separate." }
 end
 
-HC.Settings:NewPage({ name = "Key Bindings", columns = 1, description = "Start with Speed macro. Extra movement keys are optional and independent." }, function(panel, y)
+HC.Settings:NewPage({ name = "Key Bindings", columns = 1, description = "Set your speed key first. Extra keys are optional." }, function(panel, y)
     return HC.Bindings.Page(panel, y, {
         inputs = { keys = true, mouse = true, wheel = true },
-        empty = "No keys assigned. Choose Speed macro on the right to get started.",
+        empty = "No keys assigned. Choose Speed key on the right to get started.",
         poolHint = "Click an action, then press a key, mouse button or wheel. Modifiers work too.",
         pool = function() return {
             { title = "Primary speed key", items = { speedItem() } },
