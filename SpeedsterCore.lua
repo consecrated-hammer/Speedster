@@ -465,6 +465,8 @@ core:SetScript("OnEvent", function(_, event, ...)
 		if pendingRefresh then
 			ns.refreshSpeedButton()
 		end
+	elseif event == "UPDATE_BINDINGS" then
+		if ns.refreshOptions then ns.refreshOptions() end
 	elseif event == "SPELLS_CHANGED"
 	or event == "LEARNED_SPELL_IN_TAB"
 	or event == "LEARNED_SPELL_IN_SPELLBOOK" then
@@ -475,6 +477,7 @@ end)
 core:RegisterEvent("ADDON_LOADED")
 core:RegisterEvent("PLAYER_REGEN_ENABLED")
 core:RegisterEvent("SPELLS_CHANGED")
+core:RegisterEvent("UPDATE_BINDINGS")
 for _, eventName in ipairs({
 	"LEARNED_SPELL_IN_TAB",
 	"LEARNED_SPELL_IN_SPELLBOOK",

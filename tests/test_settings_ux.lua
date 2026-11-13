@@ -36,12 +36,19 @@ for _, scale in ipairs({ 0.7, 1.3 }) do
                 if match(HC, label, label) then assert(HC.Settings:Focus(spec.name, label), "focus " .. label) end
             end
         end
-        for _, label in ipairs({ "Enable speed key", "Choose your speed key", "Current macro",
+        for _, label in ipairs({ "Enable speed key", "Speed key", "Set or change speed key", "Current macro",
             "Show floating button", "Hide on flights", "Re-centre button", "Show minimap button",
             "Minimap right-click", "Show startup message", "Show what's new after updates",
             "Show unread marker", "What's new sound", "Settings search", "Show support links", "Window scale", "Copy report" }) do
             assert(match(HC, label, label), "required control searchable: " .. label)
         end
+        eq(row(HC, "Speed", "Set or change speed key"):GetText(), "Set key", "unbound action says Set key")
+        local status = row(HC, "Speed", "Speed key")
+        local unset
+        for _, region in ipairs(wow.regions) do
+            if region.parent == status and region:GetText() == "Not set" then unset = region end
+        end
+        assert(unset, "Speed page explicitly shows no binding")
         eq(saved.enabled, true, "enabled survives page building")
         eq(saved.druid_use_travel, false, "travel preference survives")
         eq(saved.shaman_use_ghost_wolf, false, "wolf preference survives")
@@ -94,7 +101,16 @@ do
     local dash = "CLICK Speedster_SpeedButton_druidDash:LeftButton"
     world.bindings.F, world.bindings.G = command, command
     world.bindings.H = dash
-    ns.refreshOptions()
+    ns.core.scripts.OnEvent(ns.core, "UPDATE_BINDINGS")
+    local status = row(HC, "Speed", "Speed key")
+    local label
+    for _, region in ipairs(wow.regions) do
+        if region.parent == status and region:GetText() == "F" then label = region end
+    end
+    assert(label, "Speed page shows the bound key while hidden")
+    eq(row(HC, "Speed", "Set or change speed key"):GetText(), "Change", "bound action says Change")
+    wow.Click(row(HC, "Speed", "Set or change speed key"))
+    eq(HC.Settings.selected, "Key Bindings", "status action opens bindings")
     local active = row(HC, "Key Bindings", "Change binding: Speed key")
     S.contains(active.key:GetText(), "F, G", "all current keys are displayed")
     known[1850] = nil

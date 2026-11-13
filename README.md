@@ -54,7 +54,7 @@ Right-click the minimap button for a quick menu: settings, the speed key on or o
 ## Settings worth knowing
 
 Settings stay on three pages: **Speed**, **Key Bindings**, then **Visibility**.
-The **Choose your speed key** link on Speed opens Key Bindings. Class and
+The **Speed key** row shows your binding or **Not set**. **Set key** or **Change** opens Key Bindings. Class and
 racial preferences belong to the primary speed key; **Optional utility keys**
 cast their named spell independently, even with the primary macro disabled.
 Only learned utility spells appear in the available pool. Existing bindings

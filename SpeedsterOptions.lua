@@ -68,10 +68,25 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     master, sy = UI.Check(setup, "Enable speed key", "Turns your speed key and the floating button on or off. Extra keys are separate. Changes in combat apply afterwards.", sy,
         function() return ns.db.enabled end,
         function(v) ns.db.enabled = v; ns.refreshSpeedButton() end)
-    local link
-    link, sy = UI.PageLink(setup, sy, "Choose your speed key", "Key Bindings")
-    UI.AttachHint(link, "Choose your speed key", "Open Key Bindings to bind the primary Speed key action. No key is assigned automatically.")
-    UI.RegisterRow(setup, link, "Choose your speed key")
+    local status = UI.Row(setup, sy, UI.CELL_H, "Speed key",
+        "Your main movement binding. Open Key Bindings to set or change it.")
+    local keyText = UI.FontString(status, "GameFontHighlight")
+    keyText:SetPoint("LEFT", status.Title, "RIGHT", 12, 0)
+    local change = UI.Button(status, 90, 24)
+    change:SetPoint("RIGHT", -UI.CELL_INSET, 0)
+    change:SetScript("OnClick", function() HC.Settings:Show("Key Bindings") end)
+    keyText:SetPoint("RIGHT", change, "LEFT", -12, 0)
+    keyText:SetJustifyH("LEFT")
+    if keyText.SetWordWrap then keyText:SetWordWrap(false) end
+    UI.AttachHint(change, "Set or change speed key", "Open Key Bindings to set or change your main movement key.")
+    UI.RegisterRow(setup, change, "Set or change speed key")
+    UI.OnRefresh(panel, function()
+        local command = ns.getPrimaryBindingCommand()
+        local bound = HC.Bindings.CommandKey(command) ~= nil
+        keyText:SetText(bound and HC.Bindings.CommandLabel(command) or "Not set")
+        change:SetText(bound and "Change" or "Set key")
+    end)
+    sy = status.hcNextY
     group.height = -sy + 4
 
     local _, class = UnitClass("player")
@@ -133,15 +148,19 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     local inspect, ig = add(1)
     local iy = 0
     _, iy = UI.Header(inspect, "Current macro", iy, "Interface\\Icons\\INV_Misc_Note_01")
-    _, iy = UI.Text(inspect, "Already applied to your speed key and floating button. No copy/paste needed. Changes in combat wait until combat ends.", iy)
+    _, iy = UI.Text(inspect, "What your speed key runs right now. Read-only.", iy)
     local macro = CreateFrame("EditBox", nil, inspect, "BackdropTemplate")
-    macro:SetSize(UI.CONTENT_WIDTH - 24, 88)
+    macro:SetSize(UI.CONTENT_WIDTH - 24, 40)
     macro:SetPoint("TOPLEFT", UI.PAD + 12, iy)
     macro:SetAutoFocus(false)
     macro:SetMultiLine(true)
     macro:SetFontObject(ChatFontNormal)
     macro:SetTextInsets(8, 8, 8, 8)
     T.Surface(macro, "rail", "edge")
+    local measure = UI.FontString(inspect, "ChatFontNormal")
+    measure:SetWidth(UI.CONTENT_WIDTH - 40)
+    measure:SetWordWrap(true)
+    measure:Hide()
     local function macroText()
         if not ns.db.enabled then return "Speed key disabled. Enable it above to use your speed key." end
         local text = ns.getMacro()
@@ -153,6 +172,15 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
         if updating or macro:GetText() == text then return end
         updating = true
         macro:SetText(text)
+        local lines = 1
+        for _ in text:gmatch("\n") do lines = lines + 1 end
+        -- Count wrapped lines too, while leaving enough room for long form macros.
+        measure:SetText(text)
+        local measured = measure:GetStringHeight() or 0
+        measure:SetText("")
+        local height = math.max(40, measured + 16, lines * 14 + 16)
+        macro:SetHeight(height)
+        ig.height = -iy + height + 8
         updating = false
     end
     macro:SetScript("OnTextChanged", render)
@@ -161,7 +189,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     UI.RegisterRow(inspect, macro, "Current macro")
     UI.OnRefresh(panel, render)
     render()
-    ig.height = -iy + 96
+    ig.height = -iy + macro:GetHeight() + 8
     return finish()
 end)
 

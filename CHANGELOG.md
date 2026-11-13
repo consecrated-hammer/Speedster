@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Show the current speed key on Speed with Set key or Change. Fit the read-only macro field to its contents.
+
 - Use Re-centre button for position actions and clearer shared update-sound labels.
 
 - Use speed key consistently and shorten movement tooltips and spell names.

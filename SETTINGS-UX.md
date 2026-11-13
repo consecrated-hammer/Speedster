@@ -19,7 +19,7 @@ Game bindings remain in the game's selected binding set, outside SavedVariables.
 | Previous control | Final location/control | Tier | Persistence and decision |
 | --- | --- | --- | --- |
 | Speed: Enable speed macro | Speed: Your speed key | E | `enabled`, unchanged; explains scope and combat deferral |
-| No setup shortcut | Speed: Choose your speed key | E | Searchable navigation to Key Bindings; no saved key |
+| No setup shortcut | Speed: Speed key status with Set key or Change | E | Current game binding shown; searchable navigation to Key Bindings; no saved key |
 | Speed: Travel Form outdoors | Speed: Class movement | S | `druid_use_travel`, unchanged; explains aquatic/indoor/outdoor/flying choices |
 | Speed: Ghost Wolf | Speed: Class movement | S | `shaman_use_ghost_wolf`, unchanged; Water Walking is separate |
 | Implicit Hunter/Rogue/Mage choices | Speed: class explanation | E | Cheetah/Sprint/Blink once learned; no invented switches or priority changes |
@@ -70,7 +70,7 @@ macro states. Keep generated macros visible without adding another click.
 
 ## Player journeys and decisions kept
 
-A new player follows Choose your speed key, selects Speed key and presses an
+A new player uses Set key on the Speed key status row, selects Speed key and presses an
 input. A regular player sees class preferences on Speed and separately named
 utility spells on Key Bindings; floating-button settings stay together. An
 advanced player can inspect/copy the read-only macro and manage multiple keys,

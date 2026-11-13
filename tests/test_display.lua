@@ -73,6 +73,7 @@ do
     local box = wow.FindText("/cast Spell 2983")
     assert(box, "Current macro shows the macro")
     equal(box.kind, "EditBox", "in a copyable box")
+    equal(box:GetHeight(), 40, "short generated macro fits a compact field")
     SlashCmdList.SPEEDSTER("toggle")
     ns.db.enabled = false
     ns.refreshSpeedButton()
