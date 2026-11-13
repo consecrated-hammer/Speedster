@@ -101,13 +101,20 @@ do
     local dash = "CLICK Speedster_SpeedButton_druidDash:LeftButton"
     world.bindings.F, world.bindings.G = command, command
     world.bindings.H = dash
+    local refreshOptions = ns.refreshOptions
+    ns.refreshOptions = function() error("UPDATE_BINDINGS must not rebuild settings") end
+    local savedDB = ns.db
+    ns.db = nil
+    ns.core.scripts.OnEvent(ns.core, "UPDATE_BINDINGS") -- safe before initialization
+    ns.db = savedDB
     ns.core.scripts.OnEvent(ns.core, "UPDATE_BINDINGS")
+    ns.refreshOptions = refreshOptions
     local status = row(HC, "Speed", "Speed key")
     local label
     for _, region in ipairs(wow.regions) do
-        if region.parent == status and region:GetText() == "F" then label = region end
+        if region.parent == status and region:GetText() == "F, G" then label = region end
     end
-    assert(label, "Speed page shows the bound key while hidden")
+    assert(label, "Speed page shows every bound key while hidden")
     eq(row(HC, "Speed", "Set or change speed key"):GetText(), "Change", "bound action says Change")
     wow.Click(row(HC, "Speed", "Set or change speed key"))
     eq(HC.Settings.selected, "Key Bindings", "status action opens bindings")

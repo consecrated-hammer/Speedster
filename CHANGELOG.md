@@ -2,14 +2,11 @@
 
 ## [Unreleased]
 
-- Show the current speed key on Speed with Set key or Change. Fit the read-only macro field to its contents.
-
-- Use Re-centre button for position actions and clearer shared update-sound labels.
-
-- Use speed key consistently and shorten movement tooltips and spell names.
-
 ### Changed
 
+- Show the current speed key on Speed with Set key or Change. Fit the read-only macro field to its contents.
+- Use Re-centre button for position actions and clearer shared update-sound labels.
+- Use speed key consistently and shorten movement tooltips and spell names.
 - Keep three settings pages, with Key Bindings second and a setup link on Speed. Explain automatic class movement and independent utility keys.
 - Make the generated macro read-only and searchable, with clearer disabled and unlearned states.
 - Refresh class, racial and utility controls after spellbook changes, including hidden pages used by search. Keep saved preferences and unavailable spell bindings accessible for removal.

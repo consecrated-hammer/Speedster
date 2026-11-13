@@ -80,12 +80,15 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     if keyText.SetWordWrap then keyText:SetWordWrap(false) end
     UI.AttachHint(change, "Set or change speed key", "Open Key Bindings to set or change your main movement key.")
     UI.RegisterRow(setup, change, "Set or change speed key")
-    UI.OnRefresh(panel, function()
-        local command = ns.getPrimaryBindingCommand()
-        local bound = HC.Bindings.CommandKey(command) ~= nil
-        keyText:SetText(bound and HC.Bindings.CommandLabel(command) or "Not set")
-        change:SetText(bound and "Change" or "Set key")
-    end)
+    local function refreshKeyStatus()
+        local keys = { GetBindingKey(ns.getPrimaryBindingCommand()) }
+        local labels = {}
+        for _, key in ipairs(keys) do labels[#labels + 1] = HC.Bindings.Label(key) end
+        keyText:SetText(#labels > 0 and table.concat(labels, ", ") or "Not set")
+        change:SetText(#labels > 0 and "Change" or "Set key")
+    end
+    ns.RefreshSpeedKeyStatus = refreshKeyStatus
+    UI.OnRefresh(panel, refreshKeyStatus)
     sy = status.hcNextY
     group.height = -sy + 4
 

@@ -466,7 +466,7 @@ core:SetScript("OnEvent", function(_, event, ...)
 			ns.refreshSpeedButton()
 		end
 	elseif event == "UPDATE_BINDINGS" then
-		if ns.refreshOptions then ns.refreshOptions() end
+		if ns.db and ns.RefreshSpeedKeyStatus then ns.RefreshSpeedKeyStatus() end
 	elseif event == "SPELLS_CHANGED"
 	or event == "LEARNED_SPELL_IN_TAB"
 	or event == "LEARNED_SPELL_IN_SPELLBOOK" then
