@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-14
+
 - Cat got your speed key? Press it again in Cat Form to Dash. Walk on Air still gets first dibs while falling outside combat. Turn off Use Dash in Cat Form on Speed if you prefer the old routine.
 
 ## [1.4.0] - 2026-11-13
