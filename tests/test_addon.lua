@@ -63,7 +63,7 @@ for _, toc in ipairs({ "Speedster_Camelot.toc" }) do
     equal(HC.Settings:IsShown(), true, toc .. ": the bare command opens settings")
     local names = {}
     for _, spec in ipairs(HC.Settings.order) do names[#names + 1] = spec.name end
-    equal(table.concat(names, ","), "Speed,Visibility,Key Bindings,What's new,Commands,Troubleshooting,About",
+    equal(table.concat(names, ","), "Speed,Key Bindings,Visibility,What's new,Commands,Troubleshooting,About",
         toc .. ": rail order")
     local failures = {}
     for name, err in pairs(HC.Settings.errors) do failures[#failures + 1] = name .. ": " .. err end
@@ -179,11 +179,11 @@ do
     equal(ns.getMacro(), "/cast !Spell 768", "unknown racial keeps normal class movement")
     ns.HammerCore.Settings:Show("Speed")
     equal(wow.FindText("Walk on Air while falling").parent.enabled, true, "saved opt-in can be turned off even if racial is unavailable")
-    assert(wow.FindText("Not learned yet. Cat Form is quick, but it's no stag. Your trainer has the antlers when you're ready."),
+    assert(wow.FindText("Not learned yet. Learn the form to enable it here; a saved preference is kept until you change it."),
         "a druid without Travel Form is told so on the page")
     ns = loadAddon("Speedster_Camelot.toc", nil, "DRUID", { [768] = true })
     ns.HammerCore.Settings:Show("Speed")
-    equal(wow.FindText("Walk on Air while falling"), nil, "other races don't see the Racial section")
+    equal(wow.Visible(wow.FindText("Walk on Air while falling")), false, "other races don't see the Racial section")
     ns = loadAddon("Speedster_Camelot.toc", nil, "DRUID", { [768] = true, [1259416] = true })
     ns.HammerCore.Settings:Show("Speed")
     equal(wow.FindText("Walk on Air while falling").parent.enabled, true, "Skyborne see Walk on Air")

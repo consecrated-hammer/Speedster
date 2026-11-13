@@ -11,6 +11,7 @@ ignore:
   - .gitignore
   - CHANGELOG.md
   - DEVELOPMENT.md
+  - SETTINGS-UX.md
   - media
   - tools
   - tests

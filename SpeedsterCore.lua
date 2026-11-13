@@ -82,15 +82,16 @@ local function utilityActionFor(spec)
 	end
 end
 
-function ns.getUtilityActions()
+function ns.getUtilityActions(includeUnavailable)
 	local actions = {}
 	for _, spec in ipairs(utilityActions) do
 		local spellName, macro = utilityActionFor(spec)
-		if spellName then
+		if spellName or includeUnavailable then
 			actions[#actions + 1] = {
 				id = spec.id,
 				label = spec.label,
 				spellName = spellName,
+				spellID = spec.spellIDs[1],
 				macro = macro,
 				warning = spec.warning,
 				bindingCommand = "CLICK "..buttonName.."_"..spec.id..":LeftButton",
@@ -381,10 +382,10 @@ function ns.unbindAction(command)
 	local cleared = false
 	local key = GetBindingKey(command)
 	while key do
-		SetBinding(key, nil)
+		if not SetBinding(key, nil) then return false, "failed to remove binding" end
 		cleared = true
 		local nextKey = GetBindingKey(command)
-		if nextKey == key then break end
+		if nextKey == key then return false, "failed to remove binding" end
 		key = nextKey
 	end
 	if cleared then

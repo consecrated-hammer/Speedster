@@ -3,7 +3,7 @@
 local S = dofile("tests/support.lua")
 local equal, contains, wow = S.equal, S.contains, S.wow
 
-local RAIL = "Speed,Visibility,Key Bindings,What's new,Commands,Troubleshooting,About"
+local RAIL = "Speed,Key Bindings,Visibility,What's new,Commands,Troubleshooting,About"
 
 for _, toc in ipairs(S.TOCS) do
     for _, class in ipairs({ "DRUID", "SHAMAN", "HUNTER", "ROGUE", "MAGE", "PRIEST", "WARRIOR" }) do
@@ -64,7 +64,7 @@ for _, toc in ipairs(S.TOCS) do
     wow.Click(S.switch("Use Travel Form outdoors"))
     equal(ns.db.druid_use_travel, false, toc .. ": Travel Form switch off")
     equal(S.primary():GetAttribute("macrotext"), "", toc .. ": no Travel Form and no Cat Form means no macro")
-    assert(wow.FindText("No speed macro yet for this class and level."), toc .. ": Current macro says so")
+    assert(wow.FindText("No speed macro yet for this class and level. Learn a supported spell or check your movement preferences."), toc .. ": Current macro says so")
     wow.Click(S.switch("Use Travel Form outdoors"))
     wow.Click(S.switch("Enable speed macro"))
     equal(ns.db.enabled, false, toc .. ": Enable speed macro off")

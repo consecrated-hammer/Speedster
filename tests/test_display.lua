@@ -76,7 +76,7 @@ do
     SlashCmdList.SPEEDSTER("toggle")
     ns.db.enabled = false
     ns.refreshSpeedButton()
-    equal(box:GetText(), "No speed macro yet for this class and level.", "turning the macro off updates the box")
+    equal(box:GetText(), "Speed macro disabled. Enable it above to use your speed key.", "turning the macro off updates the box")
     ns.db.enabled = true
     ns.refreshSpeedButton()
     equal(box:GetText(), "/cast Spell 2983", "turning it on fills it again")

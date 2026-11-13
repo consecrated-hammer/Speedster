@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Keep three settings pages, with Key Bindings second and a setup link on Speed. Explain automatic class movement and independent utility keys.
+- Make the generated macro read-only and searchable, with clearer disabled and unlearned states.
+- Refresh class, racial and utility controls after spellbook changes, including hidden pages used by search. Keep saved preferences and unavailable spell bindings accessible for removal.
+- Offer explicit conflict replacement in the binding dialog, show every assigned key, and search individual bind, change and remove actions. The slash binding shortcut keeps its existing behaviour.
+- Disable Hide on flights while the floating button is hidden; clarify that position reset preserves settings and bindings.
+- Update HammerCore to the pinned 0.5.2 development revision with dynamic binding search. Existing preference keys, defaults and movement macro rules are unchanged.
+
+
 ## [1.3.0] - 2026-11-10
 
 ### Added

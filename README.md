@@ -30,8 +30,8 @@ Speedster builds a movement macro for your class from the spells you know, and p
 ## Getting started
 
 1. Install, then type `/speedster` for settings.
-2. On the **Key Bindings** page, click **Bind key** and press the key or mouse button you want. Each extra movement spell you know has its own **Bind key** there too. Nothing is bound until you choose it.
-3. The **Speed** page shows the macro Speedster made for you. There's nothing to copy; it's already on your key.
+2. On **Key Bindings**, choose **Speed macro** under **Primary speed key**, then press a keyboard key, mouse button or wheel. Shift, Ctrl and Alt combinations work too. Nothing is bound until you choose it.
+3. On **Speed**, choose any class or racial preferences. The read-only **Current macro** shows what Speedster generates; there's nothing to copy. **Visibility** controls the floating button and minimap.
 
 ## Commands
 
@@ -52,6 +52,26 @@ Shift-drag the floating button to move it.
 Right-click the minimap button for a quick menu: settings, the speed macro on or off, the floating button and **Reset button position**. **Minimap right-click** on Visibility makes it open settings instead.
 
 ## Settings worth knowing
+
+Settings stay on three pages: **Speed**, **Key Bindings**, then **Visibility**.
+The **Choose your speed key** link on Speed opens Key Bindings. Class and
+racial preferences belong to the primary speed key; **Optional utility keys**
+cast their named spell independently, even with the primary macro disabled.
+Only learned utility spells appear in the available pool. Existing bindings
+remain listed if a spell becomes unavailable, so you can remove them.
+
+Click an active binding to replace it, or its **x** to remove every key for
+that action. **Clear all** removes only Speedster bindings after confirmation.
+If a chosen key is already used, settings offer **Replace** before taking it.
+Bare left/right clicks need a modifier. The `/speedster bind` shortcut keeps
+its existing immediate replacement behaviour and reports the old action.
+Binding changes are unavailable in combat; movement and floating-button
+changes wait until combat ends.
+
+Class and racial controls hide with the primary macro disabled; search still
+finds available preferences and highlights **Enable speed macro**. A saved
+preference remains available to switch off if spell data is temporarily missing.
+
 
 - **Use Travel Form outdoors** (druids) is on the Speed page. Turn it off and the macro sticks to Aquatic Form in water and Cat Form everywhere else.
 - **Use Ghost Wolf** (shamans) is on the Speed page too, if you'd rather not have it on your key.

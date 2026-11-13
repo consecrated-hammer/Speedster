@@ -54,6 +54,11 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
+    { version = "1.3.0-dev1", date = "2026-11-13", items = {
+        { title = "Find your speed key", text = "Key Bindings is second in the rail. Choose Speed macro for your main key; optional utility actions have separate keys. Conflicts now offer Replace before taking a key.", page = "Key Bindings" },
+        { title = "Clearer movement settings", text = "Speed explains your class choices and shows a read-only generated macro. Search finds available preferences and individual binding actions, even after learning spells.", page = "Speed" },
+        { title = "Floating button", text = "Visibility keeps the floating button, flight hiding and position reset together. Reset button position keeps your other settings and bindings.", page = "Visibility" },
+    } },
 	{ version = "1.3.0", date = "2026-11-10", items = {
 		{ title = "Hide on flights", text = "The floating button gets out of the way while you're on a flight path and comes back when you land. Turn it off on Visibility.",
 			page = "Visibility" },

@@ -1,223 +1,259 @@
 local addon, ns = ...
 local HC = ns.HammerCore
 local UI, T = HC.UI, HC.Theme
+local ADDON_ICON = "Interface\\AddOns\\Speedster\\textures\\Speedster"
 
--- Speedster's own settings pages on HammerCore's window: Speed, Key
--- Bindings (HammerCore's shared bindings page), and the floating button on
--- Visibility.  HammerCore adds the
--- minimap button, startup message, Theme, Commands, Troubleshooting and About.
-
--- Settings re-read their values when anything outside them changes.
+-- Spellbook events must refresh hidden pages too: search reads their live rows.
 function ns.refreshOptions()
-	local settings = HC.Settings
-	if settings:IsShown() then settings:Select(settings.selected) end
+    for _, page in pairs(HC.Settings.pages) do
+        if page.hcRefreshAll then page.hcRefreshAll() end
+    end
+    if HC.Settings.searchBox and HC.Settings.searchBox:HasFocus() then HC.Settings:UpdateSearch() end
 end
 
--- ── Speed ──────────────────────────────────────────────────────────────────
-
--- Section icons.  Spell icons come from the client, so they show even
--- before the spell is learned.
-local MACRO_ICON = "Interface\\Icons\\INV_Misc_Note_01"
-local CLASS_ICONS = { DRUID = 783, SHAMAN = 2645 } -- Travel Form, Ghost Wolf
--- Racial movement abilities, in the order the Racial heading prefers them:
--- the first one the player knows sets its icon, else the first listed.  Add
--- a race's speed racial here when Speedster learns to use it.
-local RACIAL_SPELLS = { 1259416 } -- Walk on Air (Skyborne)
-
-local function spellIcon(spellID)
-	if C_Spell and C_Spell.GetSpellTexture then
-		local ok, texture = pcall(C_Spell.GetSpellTexture, spellID)
-		if ok and texture then return texture end
-	end
-	if GetSpellTexture then
-		local ok, texture = pcall(GetSpellTexture, spellID)
-		if ok and texture then return texture end
-	end
+local function spellIcon(id)
+    if C_Spell and C_Spell.GetSpellTexture then
+        local ok, icon = pcall(C_Spell.GetSpellTexture, id)
+        if ok and icon then return icon end
+    end
+    if GetSpellTexture then
+        local ok, icon = pcall(GetSpellTexture, id)
+        if ok then return icon end
+    end
 end
 
-local function racialIcon()
-	for _, spellID in ipairs(RACIAL_SPELLS) do
-		if ns.isSpellKnownSafe(spellID) then return spellIcon(spellID) end
-	end
-	return spellIcon(RACIAL_SPELLS[1])
+-- Small sections reflow when an unavailable or dependent group disappears.
+-- Search ownership stays on the page body, and hidden dependencies name their switch.
+local function sections(panel, start)
+    local groups = {}
+    local function add(columns, parentRow, visible)
+        local frame = CreateFrame("Frame", nil, panel)
+        frame:SetWidth(UI.CONTENT_WIDTH + UI.PAD * 2)
+        frame.hcHeaderOwner = panel.hcHeaderOwner or panel
+        frame.hcRefresh, frame.hcRefreshAll = panel.hcRefresh, panel.hcRefreshAll
+        frame.hcParentRow = parentRow
+        UI.Columns(frame, columns)
+        groups[#groups + 1] = { frame = frame, visible = visible }
+        return frame, groups[#groups]
+    end
+    local function finish()
+        local function layout()
+            local y = start
+            for _, group in ipairs(groups) do
+                local shown = not group.visible or group.visible()
+                group.frame:SetShown(shown)
+                if shown then
+                    group.frame:ClearAllPoints()
+                    group.frame:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, y)
+                    group.frame:SetHeight(group.height)
+                    y = y - group.height - 8
+                end
+            end
+            if panel.hcSetBottom then panel.hcSetBottom(y) end
+            return y
+        end
+        UI.OnRefresh(panel, layout)
+        return layout()
+    end
+    return add, finish
 end
 
-HC.Settings:NewPage({ name = "Speed", description = "One key for the fastest way to move." }, function(panel, y)
-	local db = function() return ns.db end
-	_, y = UI.Header(panel, "Speed macro", y, MACRO_ICON)
-	_, y = UI.Check(panel, "Enable speed macro", "Build and bind the speed macro.", y,
-		function() return db().enabled end,
-		function(value) db().enabled = value; ns.refreshSpeedButton() end)
+HC.Settings:NewPage({ name = "Speed", description = "Choose your movement preferences, then set a key on Key Bindings." }, function(panel, y)
+    local add, finish = sections(panel, y)
+    local setup, group = add(1)
+    local sy = 0
+    _, sy = UI.Header(setup, "Your speed key", sy, ADDON_ICON)
+    _, sy = UI.Text(setup, "Press your speed key or click the floating button to use a known movement spell. Nothing casts automatically.", sy)
+    local master
+    master, sy = UI.Check(setup, "Enable speed macro", "Enable the primary speed key and floating-button action. Optional utility keys keep working independently. Changes made in combat apply when combat ends.", sy,
+        function() return ns.db.enabled end,
+        function(v) ns.db.enabled = v; ns.refreshSpeedButton() end)
+    local link
+    link, sy = UI.PageLink(setup, sy, "Choose your speed key", "Key Bindings")
+    UI.AttachHint(link, "Choose your speed key", "Open Key Bindings to bind the primary Speed macro action. No key is assigned automatically.")
+    UI.RegisterRow(setup, link, "Choose your speed key")
+    group.height = -sy + 4
 
-	local _, classFile = UnitClass("player")
-	if classFile == "DRUID" or classFile == "SHAMAN" then
-		_, y = UI.Header(panel, "Class", y, spellIcon(CLASS_ICONS[classFile]))
-		local row
-		if classFile == "DRUID" then
-			local function travelKnown()
-				return ns.isSpellKnownSafe(783) or ns.isSpellKnownSafe(33943) or ns.isSpellKnownSafe(40120)
-			end
-			row, y = UI.Check(panel, "Use Travel Form outdoors", "Shift into Travel Form outdoors for the speed key.", y,
-				function() return db().druid_use_travel end,
-				function(value) db().druid_use_travel = value; ns.refreshSpeedButton() end)
-			UI.OnRefresh(panel, function()
-				UI.SetEnabled(row.hcCheckbox, travelKnown())
-			end)
-			-- Said out loud under the switch, not tucked in a tooltip.
-			if not travelKnown() then
-				local note
-				note, y = UI.Text(panel, "Not learned yet. Cat Form is quick, but it's no stag. Your trainer has the antlers when you're ready.", y)
-				UI.OnRefresh(panel, function() note:SetShown(not travelKnown()) end)
-			end
-		else
-			row, y = UI.Check(panel, "Use Ghost Wolf", "Unlocks after learning Ghost Wolf.", y,
-				function() return db().shaman_use_ghost_wolf end,
-				function(value) db().shaman_use_ghost_wolf = value; ns.refreshSpeedButton() end)
-			UI.OnRefresh(panel, function() UI.SetEnabled(row.hcCheckbox, ns.isSpellKnownSafe(2645)) end)
-		end
-	end
+    local _, class = UnitClass("player")
+    local classText = {
+        DRUID = "Aquatic Form in water, Cat Form indoors, Travel Form outdoors and Flight Form where flying is allowed. Dash has its own optional key.",
+        SHAMAN = "Your speed key uses Ghost Wolf. Water Walking has its own optional key.",
+        HUNTER = "Your speed key uses Aspect of the Cheetah once learned. Aspect of the Pack has its own optional key.",
+        ROGUE = "Your speed key uses Sprint once learned.",
+        MAGE = "Your speed key uses Blink once learned. Slow Fall has its own optional key.",
+    }
+    local preferences, cg = add(2, master, function() return ns.db.enabled end)
+    local cy = 0
+    _, cy = UI.Header(preferences, "Class movement", cy, spellIcon(({ DRUID = 783, SHAMAN = 2645, HUNTER = 5118, ROGUE = 2983, MAGE = 1953 })[class]))
+    _, cy = UI.Text(preferences, classText[class] or "This class has no primary speed spell. Learned utility actions can still have their own keys on Key Bindings.", cy)
+    if class == "DRUID" or class == "SHAMAN" then
+        local key = class == "DRUID" and "druid_use_travel" or "shaman_use_ghost_wolf"
+        local function known()
+            if class == "SHAMAN" then return ns.isSpellKnownSafe(2645) end
+            return ns.isSpellKnownSafe(783) or ns.isSpellKnownSafe(33943) or ns.isSpellKnownSafe(40120)
+        end
+        local row
+        row, cy = UI.Check(preferences, class == "DRUID" and "Use Travel Form outdoors" or "Use Ghost Wolf",
+            class == "DRUID" and "Use Travel Form outdoors and Flight Form where allowed. Turn off to keep Aquatic Form in water and Cat Form elsewhere. Requires learned forms; a saved preference can always be turned off."
+                or "Use learned Ghost Wolf on your speed key. Water Walking remains a separate utility action. A saved preference can always be turned off.", cy,
+            function() return ns.db[key] end,
+            function(v)
+                if not ns.db.enabled or (not known() and not ns.db[key]) then return end
+                ns.db[key] = v; ns.refreshSpeedButton()
+            end)
+        UI.OnRefresh(panel, function()
+            row:SetShown(known() or ns.db[key])
+            UI.SetEnabled(row.hcCheckbox, ns.db.enabled and (known() or ns.db[key]))
+        end)
+        cy = UI.Flush(preferences, cy)
+        local note
+        note, cy = UI.Text(preferences, "Not learned yet. Learn the form to enable it here; a saved preference is kept until you change it.", cy)
+        UI.OnRefresh(panel, function() note:SetShown(not known()) end)
+    end
+    cg.height = -UI.Flush(preferences, cy) + 4
 
-	-- Only for races with a movement racial Speedster uses; anyone else
-	-- would just see a switch they can never turn on.  An existing opt-in
-	-- keeps the section so it can always be switched off.
-	local function knowsRacial()
-		for _, spellID in ipairs(RACIAL_SPELLS) do
-			if ns.isSpellKnownSafe(spellID) then return true end
-		end
-		return false
-	end
-	if knowsRacial() or db().walk_on_air_while_falling then
-		_, y = UI.Header(panel, "Racial", y, racialIcon)
-		local racial
-		racial, y = UI.Check(panel, "Walk on Air while falling", "Requires Walk on Air. Use the normal speed key for it while falling outside combat. Your separate Walk on Air key still works.", y,
-			function() return db().walk_on_air_while_falling end,
-			function(value) db().walk_on_air_while_falling = value; ns.refreshSpeedButton() end)
-		UI.OnRefresh(panel, function()
-			-- Recheck after spellbook load; an existing opt-in can always be disabled.
-			UI.SetEnabled(racial.hcCheckbox, ns.isSpellKnownSafe(1259416) or db().walk_on_air_while_falling)
-		end)
-	end
+    local function racialAvailable() return ns.isSpellKnownSafe(1259416) or ns.db.walk_on_air_while_falling end
+    local racial, rg = add(1, nil, function() return racialAvailable() and ns.db.enabled end)
+    local ry = 0
+    _, ry = UI.Header(racial, "Racial movement", ry, function() return spellIcon(1259416) end)
+    local racialRow
+    racialRow, ry = UI.Check(racial, "Walk on Air while falling", "Skyborne opt-in: press your normal speed key while falling outside combat. Falling alone never casts. A failed cast does not try your class spell on the same press. Ordinary movement and the separate racial key remain; combat keeps the secure class fallback.", ry,
+        function() return ns.db.walk_on_air_while_falling end,
+        function(v)
+            if not ns.db.enabled or not racialAvailable() then return end
+            ns.db.walk_on_air_while_falling = v; ns.refreshSpeedButton()
+        end)
+    UI.OnRefresh(panel, function()
+        -- Unavailable racial rows have no search parent; a genuine dependency does.
+        racial.hcParentRow = racialAvailable() and master or nil
+        UI.SetEnabled(racialRow.hcCheckbox, ns.db.enabled and racialAvailable())
+    end)
+    rg.height = -ry + 4
 
-	y = UI.Flush(panel, y)
-	local divider = T.Fill(panel:CreateTexture(nil, "ARTWORK"), "edge")
-	divider:SetHeight(1)
-	divider:SetPoint("TOPLEFT", UI.PAD, y - 2)
-	divider:SetPoint("TOPRIGHT", -20, y - 2)
-	y = y - 20
-	_, y = UI.Header(panel, "Current macro", y)
-	_, y = UI.Text(panel, "Speedster applies this macro to your speed key. No action needed.", y)
-	local macro = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-	macro:SetSize(UI.CONTENT_WIDTH - 24, 26)
-	macro:SetPoint("TOPLEFT", UI.PAD + 12, y)
-	macro:SetAutoFocus(false)
-	macro:SetFontObject(ChatFontNormal)
-	macro:SetTextInsets(8, 8, 0, 0)
-	T.Surface(macro, "rail", "edge")
-	local function macroText()
-		local text = ns.getMacro()
-		return text ~= "" and text or "No speed macro yet for this class and level."
-	end
-	macro:SetScript("OnEscapePressed", function(self) self:SetText(macroText()); self:ClearFocus() end)
-	UI.AttachHint(macro, "Current macro", "Select and copy this generated macro if useful.")
-	UI.OnRefresh(panel, function()
-		if not (macro.HasFocus and macro:HasFocus()) then macro:SetText(macroText()) end
-	end)
-	macro:SetText(macroText())
-	y = y - 34
-	return y
+    local inspect, ig = add(1)
+    local iy = 0
+    _, iy = UI.Header(inspect, "Current macro", iy, "Interface\\Icons\\INV_Misc_Note_01")
+    _, iy = UI.Text(inspect, "Already applied to your speed key and floating button. No copy/paste needed. Changes in combat wait until combat ends.", iy)
+    local macro = CreateFrame("EditBox", nil, inspect, "BackdropTemplate")
+    macro:SetSize(UI.CONTENT_WIDTH - 24, 88)
+    macro:SetPoint("TOPLEFT", UI.PAD + 12, iy)
+    macro:SetAutoFocus(false)
+    macro:SetMultiLine(true)
+    macro:SetFontObject(ChatFontNormal)
+    macro:SetTextInsets(8, 8, 8, 8)
+    T.Surface(macro, "rail", "edge")
+    local function macroText()
+        if not ns.db.enabled then return "Speed macro disabled. Enable it above to use your speed key." end
+        local text = ns.getMacro()
+        return text ~= "" and text or "No speed macro yet for this class and level. Learn a supported spell or check your movement preferences."
+    end
+    local updating
+    local function render()
+        local text = macroText()
+        if updating or macro:GetText() == text then return end
+        updating = true
+        macro:SetText(text)
+        updating = false
+    end
+    macro:SetScript("OnTextChanged", render)
+    macro:SetScript("OnEscapePressed", function(self) render(); self:ClearFocus() end)
+    UI.AttachHint(macro, "Current macro", "Read-only generated movement macro; select to copy for inspection. Class conditions choose water, indoors, outdoors and flight. Walk on Air is prepared on each press outside combat; this view is refreshed with settings and spellbook changes.")
+    UI.RegisterRow(inspect, macro, "Current macro")
+    UI.OnRefresh(panel, render)
+    render()
+    ig.height = -iy + 96
+    return finish()
 end)
 
--- ── Visibility: the floating button ────────────────────────────────────────
+local function actionItems(includeUnavailable)
+    local items = {}
+    for _, action in ipairs(ns.getUtilityActions(includeUnavailable)) do
+        items[#items + 1] = {
+            id = action.bindingCommand, name = action.label,
+            icon = spellIcon(action.spellName or action.spellID),
+            detail = (action.warning or "Optional utility action; separate from your primary speed key.")
+                .. (not action.spellName and " Not currently learned; you can remove its saved binding." or ""),
+        }
+    end
+    return items
+end
+local function speedItem()
+    return { id = ns.getPrimaryBindingCommand(), name = "Speed macro", icon = ADDON_ICON,
+        detail = "Primary movement key: uses your Speed page preferences and known class spells. Optional utility keys are separate." }
+end
+
+HC.Settings:NewPage({ name = "Key Bindings", columns = 1, description = "Start with Speed macro. Extra movement keys are optional and independent." }, function(panel, y)
+    return HC.Bindings.Page(panel, y, {
+        inputs = { keys = true, mouse = true, wheel = true },
+        empty = "No keys assigned. Choose Speed macro on the right to get started.",
+        poolHint = "Click an action, then press a key, mouse button or wheel. Modifiers work too.",
+        pool = function() return {
+            { title = "Primary speed key", items = { speedItem() } },
+            { title = "Optional utility keys", items = actionItems(), empty = "No extra movement spells learned yet." },
+        } end,
+        label = function(keys)
+            if type(keys) ~= "table" then return HC.Bindings.Label(keys) end
+            local labels = {}
+            for _, key in ipairs(keys) do labels[#labels + 1] = HC.Bindings.Label(key) end
+            return table.concat(labels, ", ")
+        end,
+        bound = function()
+            local bound, all = {}, actionItems(true)
+            table.insert(all, 1, speedItem())
+            for _, item in ipairs(all) do
+                local keys = { GetBindingKey(item.id) }
+                if #keys > 0 then
+                    item.key = keys
+                    bound[#bound + 1] = item
+                end
+            end
+            return bound
+        end,
+        bind = function(item, key)
+            local function apply(replace)
+                local ok, why, conflict = HC.Bindings.BindCommand(item.id, key, replace)
+                if ok then
+                    ns.refreshOptions()
+                    HC.Print(("bound %s to %s"):format(item.name, HC.Bindings.Label(key)))
+                end
+                return ok, why, conflict
+            end
+            local ok, why, conflict = apply(false)
+            if conflict == "conflict" then return false, why, function() return apply(true) end end
+            return ok, why
+        end,
+        unbind = function(id)
+            local ok, problem = ns.unbindAction(id)
+            if not ok then HC.Print(problem) end
+        end,
+        clearAll = function()
+            local all = actionItems(true)
+            table.insert(all, 1, speedItem())
+            for _, item in ipairs(all) do
+                local ok, problem = ns.unbindAction(item.id)
+                if not ok then HC.Print(problem); return end
+            end
+        end,
+    })
+end)
 
 HC.Settings:AddVisibility()
 HC.spec.visibility = function(panel, y)
-	_, y = UI.Header(panel, "Floating button", y, HC.spec.icon)
-	_, y = UI.Check(panel, "Show floating button", "A clickable speed button on screen. Shift-drag to move it.", y,
-		function() return ns.db.show_floating_button end,
-		function(value) ns.db.show_floating_button = value; ns.refreshSpeedButton() end)
-	_, y = UI.Check(panel, "Hide on flights", "Hide the floating button from takeoff to landing.", y,
-		function() return ns.db.hide_on_flights end,
-		function(value) ns.db.hide_on_flights = value; ns.refreshSpeedButton() end)
-	_, y = UI.ActionButton(panel, y, "Reset button position",
-		function() HC.Commands:Dispatch("reset position") end,
-		"Move the floating button back to the centre of the screen.", nil, 200)
-	return y
+    _, y = UI.Header(panel, "Floating button", y, ADDON_ICON)
+    local show
+    show, y = UI.Check(panel, "Show floating button", "A clickable speed button on screen. Shift-left-drag to move it. Uses the same movement preferences as your primary speed key.", y,
+        function() return ns.db.show_floating_button end,
+        function(v) ns.db.show_floating_button = v; ns.refreshSpeedButton() end)
+    local flights
+    flights, y = UI.Check(panel, "Hide on flights", "Hide the floating button from takeoff to landing on a flight path. Requires Show floating button; protected visibility changes wait until combat ends.", y,
+        function() return ns.db.hide_on_flights end,
+        function(v) if ns.db.show_floating_button then ns.db.hide_on_flights = v; ns.refreshSpeedButton() end end)
+    -- Keep position reset accessible even while the button is hidden.
+    UI.OnRefresh(panel, function()
+        UI.SetEnabled(flights.hcCheckbox, ns.db.show_floating_button)
+        flights:EnableMouse(ns.db.show_floating_button)
+    end)
+    _, y = UI.ActionButton(panel, y, "Reset button position", function() HC.Commands:Dispatch("reset position") end,
+        "Move only the floating button back to the centre. Keeps all settings, visibility choices and key bindings. Shift-left-drag to position it yourself.", nil, 200)
+    return y
 end
-
--- ── Key Bindings ───────────────────────────────────────────────────────────
--- HammerCore's shared page: pick an action on the right, press a key, and it
--- joins the bound list on the left.
-
-local ADDON_ICON = "Interface\\AddOns\\Speedster\\textures\\Speedster"
-
-local function spellIcon(name)
-	if C_Spell and C_Spell.GetSpellTexture then
-		local icon = C_Spell.GetSpellTexture(name)
-		if icon then return icon end
-	end
-	if GetSpellTexture then return GetSpellTexture(name) end
-end
-
-local function actionItems()
-	local items = {}
-	for _, action in ipairs(ns.getUtilityActions()) do
-		items[#items + 1] = {
-			id = action.bindingCommand,
-			name = action.label,
-			icon = spellIcon(action.spellName),
-			detail = action.warning,
-		}
-	end
-	return items
-end
-
-local function speedItem()
-	return {
-		id = ns.getPrimaryBindingCommand(),
-		name = "Speed macro",
-		icon = ADDON_ICON,
-		detail = "Casts the fastest way to move for where you are.",
-	}
-end
-
-HC.Settings:NewPage({ name = "Key Bindings", columns = 1, description = "Keys for the speed macro and extra movement actions." }, function(panel, y)
-	local bottom = HC.Bindings.Page(panel, y, {
-		inputs = { keys = true, mouse = true, wheel = true },
-		empty = "Nothing bound yet. Pick an action on the right.",
-		poolHint = "Click one, then press a key, mouse button or wheel.",
-		pool = function()
-			return {
-				{ title = "Speed", items = { speedItem() } },
-				{ title = "Movement actions", items = actionItems(),
-					empty = "Actions appear here once this character learns them." },
-			}
-		end,
-		bound = function()
-			local bound = {}
-			local all = actionItems()
-			table.insert(all, 1, speedItem())
-			for _, item in ipairs(all) do
-				local key = GetBindingKey(item.id)
-				if key then
-					bound[#bound + 1] = { id = item.id, name = item.name, icon = item.icon, key = key }
-				end
-			end
-			return bound
-		end,
-		bind = function(item, key)
-			local ok, result = ns.bindActionKey(item.id, key)
-			if not ok then return false, result end
-			HC.Print(("bound %s to %s"):format(item.name, GetBindingText(result, "KEY_") or result))
-			return true
-		end,
-		unbind = function(id)
-			local ok, problem = ns.unbindAction(id)
-			if not ok and problem then HC.Print(problem) end
-		end,
-		clearAll = function()
-			ns.unbindAction(ns.getPrimaryBindingCommand())
-			for _, item in ipairs(actionItems()) do ns.unbindAction(item.id) end
-		end,
-	})
-	return bottom
-end)
