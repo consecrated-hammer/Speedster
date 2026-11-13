@@ -196,20 +196,20 @@ end
 -- release's highlights once; a fresh install stays quiet.
 do
     local saved = { enabled = true, hammerCore = { startupMessage = false } }
-    local ns = loadAddon("Speedster_Camelot.toc", saved, "DRUID", nil, "1.3.0-dev1")
+    local ns = loadAddon("Speedster_Camelot.toc", saved, "DRUID", nil, "1.4.0-dev1")
     local HC = ns.HammerCore
     local W = HC.WhatsNew
     assert(W.eventFrame, "an update schedules What's new")
     C_Timer.After = function(_, fn) fn() end
     W.eventFrame.scripts.OnEvent(W.eventFrame, "PLAYER_ENTERING_WORLD")
     equal(W.frame ~= nil and W.frame.shown, true, "What's new shows after the update")
-    assert(wow.FindText("Speedster 1.3.0"), "it lists 1.3.0")
+    assert(wow.FindText("Speedster 1.4.0"), "it lists 1.4.0")
     assert(wow.FindButton("Open Visibility"), "a button opens Visibility")
-    equal(saved.hammerCore.whatsNewSeen, "1.3.0", "showing records the version")
+    equal(saved.hammerCore.whatsNewSeen, "1.4.0", "showing records the version")
     assert(HC.Commands.byName.whatsnew, "/speedster whatsnew is registered")
 
     local fresh = {}
-    ns = loadAddon("Speedster_Camelot.toc", fresh, "DRUID", nil, "1.3.0-dev1")
+    ns = loadAddon("Speedster_Camelot.toc", fresh, "DRUID", nil, "1.4.0-dev1")
     equal(ns.HammerCore.WhatsNew.eventFrame, nil, "a fresh install stays quiet")
 end
 

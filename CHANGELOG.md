@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-13
+
 ### Changed
 
 - Show the current speed key on Speed with Set key or Change. Fit the read-only macro field to its contents.
