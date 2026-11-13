@@ -56,7 +56,7 @@ for _, scale in ipairs({ 0.7, 1.3 }) do
         eq(saved.hide_on_flights, false, "flight preference survives")
         eq(saved.floating_button_point.x, 123, "position survives")
         eq(saved.hammerCore.settingsScale, scale, "window scale survives")
-        eq(#HC.Settings:Search("Walk on Air while falling"), 0, "unavailable racial excluded")
+        eq(match(HC, "Walk on Air while falling", "Walk on Air while falling"), nil, "unavailable racial control excluded")
         HC.Settings:Show("Visibility")
         eq(S.switch("Hide on flights").enabled, false, "dependent flight control disabled")
         wow.Click(S.switch("Hide on flights")) -- direct handler must still be safe
@@ -67,6 +67,24 @@ for _, scale in ipairs({ 0.7, 1.3 }) do
         eq(saved.druid_use_travel, false, "position reset keeps class choice")
         eq(saved.hammerCore.minimap, false, "position reset keeps shared choices")
     end
+end
+
+do
+    local saved = { enabled = true, druid_dash_in_cat = false }
+    local ns, HC = S.load({ class = "DRUID", saved = saved, known = { [768] = true, [1850] = true } })
+    HC.Settings:Show("Speed")
+    eq(saved.druid_dash_in_cat, false, "Dash opt-out survives loading")
+    assert(match(HC, "Dash", "Use Dash in Cat Form"), "Cat Dash preference is searchable")
+    assert(HC.Settings:Focus("Speed", "Use Dash in Cat Form"), "search focuses Cat Dash preference")
+    wow.Click(S.switch("Use Dash in Cat Form"))
+    eq(saved.druid_dash_in_cat, true, "Cat Dash preference can be enabled")
+    wow.Click(S.switch("Use Dash in Cat Form"))
+    eq(saved.druid_dash_in_cat, false, "Cat Dash preference can be disabled")
+    saved.enabled = false
+    ns.refreshSpeedButton()
+    HC.Settings:Show("Speed")
+    assert(match(HC, "Dash", "Use Dash in Cat Form"), "hidden Cat Dash setting stays searchable")
+    assert(HC.Settings:Focus("Speed", "Use Dash in Cat Form"), "hidden Cat Dash search focuses its master switch")
 end
 
 do

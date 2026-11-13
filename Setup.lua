@@ -54,6 +54,9 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
+    { version = "1.4.1", date = "2026-11-14", items = {
+        { title = "Cat got your speed key?", text = "Already in Cat Form? Press your speed key to Dash. Walk on Air still gets first dibs while falling outside combat. Toggle Use Dash in Cat Form on Speed.", kind = "new", page = "Speed" },
+    } },
     { version = "1.4.0", date = "2026-11-13", items = {
         { title = "Find your speed key", text = "Key Bindings is second in the rail. Choose Speed key for your main key; optional utility actions have separate keys. Conflicts now offer Replace before taking a key.", page = "Key Bindings" },
         { title = "Clearer movement settings", text = "Speed shows your current key with Set key or Change, plus a fitted read-only macro. Search finds available preferences and individual binding actions, even after learning spells.", page = "Speed" },

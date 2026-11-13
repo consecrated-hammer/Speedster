@@ -25,6 +25,7 @@ function ns.BuildDiagnosticReport()
         "Database: " .. (ns.dbWasFresh and "created this load" or type(ns.db) == "table" and "loaded" or "unavailable"),
         "Enabled: " .. yesNo(db.enabled),
         "Walk on Air while falling: " .. yesNo(db.walk_on_air_while_falling),
+        "Use Dash in Cat Form: " .. yesNo(db.druid_dash_in_cat),
         "Class: " .. tostring(select(2, UnitClass("player")) or "unknown"),
         "Primary binding: " .. tostring(ns.getBindingText and ns.getBindingText() or "unknown"),
         "Utility actions exposed: " .. tostring(#(ns.getUtilityActionIDs and ns.getUtilityActionIDs() or {})),

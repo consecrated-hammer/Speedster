@@ -113,6 +113,17 @@ function ns.getPrimaryBindingCommand()
 	return bindingCommand
 end
 
+-- Macro form numbers are spellbook slots, not fixed druid form IDs.
+local function catFormIndex(catName)
+	if type(GetNumShapeshiftForms) ~= "function" or type(GetShapeshiftFormInfo) ~= "function" then return end
+	for index = 1, GetNumShapeshiftForms() do
+		local _, name, _, spellID, legacySpellID = GetShapeshiftFormInfo(index)
+		if spellID == 768 or legacySpellID == 768 or (type(name) == "string" and name == catName) then
+			return index
+		end
+	end
+end
+
 local function buildClassMacro()
 	if not db or not db.enabled then return "" end
 
@@ -123,21 +134,21 @@ local function buildClassMacro()
 		local travel = db.druid_use_travel and getSpellNameIfKnown(783) or nil
 		local flight = db.druid_use_travel and (getSpellNameIfKnown(40120) or getSpellNameIfKnown(33943)) or nil
 
+		local clauses = {}
+		local dash = db.druid_dash_in_cat and cat and getSpellNameIfKnown(1850) or nil
+		local catIndex = dash and catFormIndex(cat)
+		-- One secure /cast chooses one clause: a failed Dash never falls through
+		-- into a form change, and active form checks still work during combat.
+		if catIndex then clauses[#clauses + 1] = "[form:"..catIndex.."]"..dash end
+		if aquatic then clauses[#clauses + 1] = "[swimming]!"..aquatic end
 		if travel then
-			local air = flight or travel
-			local clauses = {}
-			if aquatic then clauses[#clauses + 1] = "[swimming]!"..aquatic end
 			if cat then clauses[#clauses + 1] = "[indoors]!"..cat end
-			clauses[#clauses + 1] = "[flyable,nocombat]!"..air
+			clauses[#clauses + 1] = "[flyable,nocombat]!"..(flight or travel)
 			clauses[#clauses + 1] = "!"..travel
-			return "/cast "..table.concat(clauses, ";")
+		elseif cat then
+			clauses[#clauses + 1] = "!"..cat
 		end
-
-		if aquatic then
-			if cat then return ("/cast [swimming]!%s;!%s"):format(aquatic, cat) end
-			return "/cast [swimming]!"..aquatic
-		end
-		if cat then return "/cast !"..cat end
+		if #clauses > 0 then return "/cast "..table.concat(clauses, ";") end
 	end
 
 	if classFile == "SHAMAN" then
@@ -428,6 +439,7 @@ core:SetScript("OnEvent", function(_, event, ...)
 		if db.shaman_use_ghost_wolf == nil then
 			db.shaman_use_ghost_wolf = true
 		end
+		if type(db.druid_dash_in_cat) ~= "boolean" then db.druid_dash_in_cat = true end
 		if type(db.hide_on_flights) ~= "boolean" then
 			db.hide_on_flights = true
 		end
@@ -467,7 +479,8 @@ core:SetScript("OnEvent", function(_, event, ...)
 		end
 	elseif event == "UPDATE_BINDINGS" then
 		if ns.db and ns.RefreshSpeedKeyStatus then ns.RefreshSpeedKeyStatus() end
-	elseif event == "SPELLS_CHANGED"
+	elseif event == "UPDATE_SHAPESHIFT_FORMS"
+	or event == "SPELLS_CHANGED"
 	or event == "LEARNED_SPELL_IN_TAB"
 	or event == "LEARNED_SPELL_IN_SPELLBOOK" then
 		ns.refreshSpeedButton()
@@ -477,6 +490,7 @@ end)
 core:RegisterEvent("ADDON_LOADED")
 core:RegisterEvent("PLAYER_REGEN_ENABLED")
 core:RegisterEvent("SPELLS_CHANGED")
+core:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
 core:RegisterEvent("UPDATE_BINDINGS")
 for _, eventName in ipairs({
 	"LEARNED_SPELL_IN_TAB",
