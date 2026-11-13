@@ -49,7 +49,7 @@ Every Consecrated Hammer addon also has `help`, `version`, `about`, `debug`, `st
 
 Shift-drag the floating button to move it.
 
-Right-click the minimap button for a quick menu: settings, the speed key on or off, the floating button and **Reset button position**. **Minimap right-click** on Visibility makes it open settings instead.
+Right-click the minimap button for a quick menu: settings, the speed key on or off, the floating button and **Re-centre button**. **Minimap right-click** on Visibility makes it open settings instead.
 
 ## Settings worth knowing
 

@@ -37,9 +37,9 @@ for _, scale in ipairs({ 0.7, 1.3 }) do
             end
         end
         for _, label in ipairs({ "Enable speed key", "Choose your speed key", "Current macro",
-            "Show floating button", "Hide on flights", "Reset button position", "Show minimap button",
+            "Show floating button", "Hide on flights", "Re-centre button", "Show minimap button",
             "Minimap right-click", "Show startup message", "Show what's new after updates",
-            "Mark unread What's new", "Turn-in sound", "Settings search", "Show support links", "Window scale", "Copy report" }) do
+            "Show unread marker", "What's new sound", "Settings search", "Show support links", "Window scale", "Copy report" }) do
             assert(match(HC, label, label), "required control searchable: " .. label)
         end
         eq(saved.enabled, true, "enabled survives page building")
@@ -54,7 +54,7 @@ for _, scale in ipairs({ 0.7, 1.3 }) do
         eq(S.switch("Hide on flights").enabled, false, "dependent flight control disabled")
         wow.Click(S.switch("Hide on flights")) -- direct handler must still be safe
         eq(saved.hide_on_flights, false, "disabled dependent cannot mutate")
-        wow.Click(wow.FindButton("Reset button position"))
+        wow.Click(wow.FindButton("Re-centre button"))
         eq(saved.floating_button_point, nil, "position alone reset")
         eq(saved.show_floating_button, false, "position reset keeps visibility")
         eq(saved.druid_use_travel, false, "position reset keeps class choice")

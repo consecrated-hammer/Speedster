@@ -32,12 +32,12 @@ Game bindings remain in the game's selected binding set, outside SavedVariables.
 | Clear all | Same page, confirmed | A | Every Speedster action, including unavailable spells; unrelated bindings preserved |
 | Visibility: Show floating button | Visibility: Floating button | S | `show_floating_button`, unchanged; Shift-left-drag explained |
 | Visibility: Hide on flights | Same section | S | `hide_on_flights`, unchanged; disabled when button hidden |
-| Reset button position | Same section | S | Clears only `floating_button_point`; retains settings, bindings and shared preferences |
+| Re-centre button | Same section | S | Clears only `floating_button_point`; retains settings, bindings and shared preferences |
 | Show minimap button | Visibility: Minimap button | S | `hammerCore.minimap` plus angle; existing legacy migration preserved |
 | Minimap right-click | Same section | S | `hammerCore.minimapRightClick`, menu/settings |
 | Show startup message | Visibility: Updates | S | `hammerCore.startupMessage`; existing legacy migration preserved |
 | Show What's new after updates | Same section | S | `hammerCore.whatsNew`, unchanged |
-| Mark unread What's new / Turn-in sound | Same section | A | `hammerCore.whatsNewDot`, `whatsNewSound`, unchanged |
+| Show unread marker / What's new sound | Same section | A | `hammerCore.whatsNewDot`, `whatsNewSound`, unchanged |
 | Settings search / Show support links | Visibility: Settings window | S | `hammerCore.settingsSearch`, `supportLinks`, unchanged |
 | Header scale / window dragging | Shared header, 0.7 to 1.3 | S | `hammerCore.settingsScale`, `settingsPoint`, unchanged |
 | Theme | Existing hidden shared facility | A | Modern remains current; saved Classic fallback unchanged |
@@ -70,7 +70,7 @@ macro states. Keep generated macros visible without adding another click.
 
 ## Player journeys and decisions kept
 
-A new player follows Choose your speed key, selects Speed macro and presses an
+A new player follows Choose your speed key, selects Speed key and presses an
 input. A regular player sees class preferences on Speed and separately named
 utility spells on Key Bindings; floating-button settings stay together. An
 advanced player can inspect/copy the read-only macro and manage multiple keys,

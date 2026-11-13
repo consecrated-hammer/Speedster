@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Use Re-centre button for position actions and clearer shared update-sound labels.
+
 - Use speed key consistently and shorten movement tooltips and spell names.
 
 ### Changed

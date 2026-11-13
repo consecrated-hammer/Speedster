@@ -253,7 +253,7 @@ HC.spec.visibility = function(panel, y)
         UI.SetEnabled(flights.hcCheckbox, ns.db.show_floating_button)
         flights:EnableMouse(ns.db.show_floating_button)
     end)
-    _, y = UI.ActionButton(panel, y, "Reset button position", function() HC.Commands:Dispatch("reset position") end,
+    _, y = UI.ActionButton(panel, y, "Re-centre button", function() HC.Commands:Dispatch("reset position") end,
         "Move only the floating button back to the centre. Keeps all settings, visibility choices and key bindings. Shift-left-drag to position it yourself.", nil, 200)
     return y
 end

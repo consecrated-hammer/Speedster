@@ -37,7 +37,7 @@ for _, toc in ipairs(S.TOCS) do
     for _, label in ipairs({ "Show floating button", "Hide on flights" }) do
         assert(S.switch(label), toc .. ": Visibility has " .. label)
     end
-    assert(wow.FindButton("Reset button position"), toc .. ": Visibility has Reset button position")
+    assert(wow.FindButton("Re-centre button"), toc .. ": Visibility has Re-centre button")
     assert(wow.FindText("Minimap right-click"), toc .. ": Visibility has Minimap right-click")
     assert(wow.FindText("Settings search"), toc .. ": Visibility has Settings search")
     equal(wow.Visible(wow.FindText("Reload UI")), false, toc .. ": no standing Reload UI button")
@@ -55,8 +55,8 @@ for _, toc in ipairs(S.TOCS) do
     equal(S.floating():IsShown(), true, toc .. ": and shows it again")
 
     ns.db.floating_button_point = { point = "TOP", relativePoint = "TOP", x = 1, y = 1 }
-    wow.Click(wow.FindButton("Reset button position"))
-    equal(ns.db.floating_button_point, nil, toc .. ": Reset button position clears the saved spot")
+    wow.Click(wow.FindButton("Re-centre button"))
+    equal(ns.db.floating_button_point, nil, toc .. ": Re-centre button clears the saved spot")
 
     -- Speed page switches rebuild the macro.
     HC.Settings:Show("Speed")

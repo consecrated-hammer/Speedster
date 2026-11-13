@@ -69,7 +69,7 @@ for _, toc in ipairs(S.TOCS) do
     equal(HC.Minimap.RightClickLabel(), "menu", toc .. ": tooltip says menu")
     local texts = {}
     for _, item in ipairs(HC.Minimap:MenuItems()) do texts[#texts + 1] = item.separator and "-" or item.text end
-    equal(table.concat(texts, ","), "Speedster settings,-,Speed key,Show floating button,Reset button position",
+    equal(table.concat(texts, ","), "Speedster settings,-,Speed key,Show floating button,Re-centre button",
         toc .. ": menu items")
     local item = S.menuItem(HC, "Speed key")
     equal(item.checked, true, toc .. ": Speed key is ticked")
@@ -86,8 +86,8 @@ for _, toc in ipairs(S.TOCS) do
     S.menuItem(HC, "Show floating button").func()
     equal(S.floating():IsShown(), true, toc .. ": and shows it")
     ns.db.floating_button_point = { point = "TOP", relativePoint = "TOP", x = 1, y = 2 }
-    S.menuItem(HC, "Reset button position").func()
-    equal(ns.db.floating_button_point, nil, toc .. ": Reset button position works")
+    S.menuItem(HC, "Re-centre button").func()
+    equal(ns.db.floating_button_point, nil, toc .. ": Re-centre button works")
     S.menuItem(HC, "Speedster settings").func()
     equal(HC.Settings:IsShown(), true, toc .. ": the settings item opens settings")
     HC.Minimap:RightClick()
