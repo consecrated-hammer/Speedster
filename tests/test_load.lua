@@ -36,7 +36,7 @@ for _, toc in ipairs(S.TOCS) do
     equal(wow.LastPrint(), "Speedster v1.3.0 loaded - type /speedster for settings, /speedster help for commands",
         toc .. ": login message")
     equal(HC.name, "Speedster", toc .. ": HammerCore knows the addon")
-    equal(HC.VERSION, "0.5.0", toc .. ": vendored HammerCore 0.5.0")
+    equal(HC.VERSION, "0.5.2", toc .. ": vendored HammerCore 0.5.2")
 
     -- Secure buttons and their binding names.
     local primary = S.primary()
