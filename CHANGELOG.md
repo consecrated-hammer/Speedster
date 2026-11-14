@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-11-14
+
 - Cats can swim, but Aquatic Form has the better outfit. Your speed key switches to Aquatic Form while swimming, even from Cat Form. Dash stays on dry land; Walk on Air keeps its falling priority.
 
 ## [1.4.1] - 2026-11-14
