@@ -54,6 +54,9 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
+    { version = "1.4.2", date = "2026-11-14", items = {
+        { title = "Cats can swim. Seals do it better.", text = "Swimming takes Aquatic Form first, even from Cat Form. Dash stays on dry land; Walk on Air still gets first dibs while falling outside combat.", kind = "fix", page = "Speed" },
+    } },
     { version = "1.4.1", date = "2026-11-14", items = {
         { title = "Cat got your speed key?", text = "Already in Cat Form? Press your speed key to Dash. Walk on Air still gets first dibs while falling outside combat. Toggle Use Dash in Cat Form on Speed.", kind = "new", page = "Speed" },
     } },

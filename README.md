@@ -16,7 +16,7 @@ Speedster builds a movement macro for your class from the spells you know, and p
 
 - **Builds the macro for you**, from your class and known spells, and rebuilds it when you learn something new.
 - **Picks the right form for druids.** Aquatic Form while swimming, Cat Form indoors, and Travel Form outdoors (or Flight Form where you can fly, once you have it).
-- **A second press for extra zoom.** Already in Cat Form? The same key uses learned Dash. Walk on Air keeps priority while falling outside combat when enabled. Use Dash in Cat Form on Speed starts on; switch it off to keep the previous form-only behavior. Dash on cooldown leaves you in Cat Form.
+- **A second press for extra zoom.** Already in Cat Form on land? The same key uses learned Dash. Swimming takes Aquatic Form first. Walk on Air keeps priority while falling outside combat when enabled. Use Dash in Cat Form on Speed starts on; switch it off to keep the previous form-only behavior. Dash on cooldown leaves you in Cat Form.
 - **Covers the other speed classes too:** Shaman Ghost Wolf, Hunter Aspect of the Cheetah, Rogue Sprint and Mage Blink.
 - **Extra movement keys.** Spells you know from the list below each get their own key, so they don't fight with the main one:
   - Druid Dash

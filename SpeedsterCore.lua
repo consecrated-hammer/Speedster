@@ -139,8 +139,8 @@ local function buildClassMacro()
 		local catIndex = dash and catFormIndex(cat)
 		-- One secure /cast chooses one clause: a failed Dash never falls through
 		-- into a form change, and active form checks still work during combat.
-		if catIndex then clauses[#clauses + 1] = "[form:"..catIndex.."]"..dash end
 		if aquatic then clauses[#clauses + 1] = "[swimming]!"..aquatic end
+		if catIndex then clauses[#clauses + 1] = "[form:"..catIndex..",noswimming]"..dash end
 		if travel then
 			if cat then clauses[#clauses + 1] = "[indoors]!"..cat end
 			clauses[#clauses + 1] = "[flyable,nocombat]!"..(flight or travel)

@@ -137,25 +137,25 @@ do
     GetNumShapeshiftForms = function() return #forms end
     GetShapeshiftFormInfo = function(index) return 1, false, true, forms[index] end
     ns.refreshSpeedButton()
-    equal(ns.getMacro(), "/cast [form:3]Spell 1850;" .. normal:sub(7), "Dash precedes unchanged water/travel/flight clauses")
+    equal(ns.getMacro(), "/cast [swimming]!Spell 1066;[form:3,noswimming]Spell 1850;[indoors]!Spell 768;[flyable,nocombat]!Spell 33943;!Spell 783", "Aquatic Form precedes Dash, retaining other form choices")
     equal(_G.Speedster_SpeedButton_druidDash:GetAttribute("macrotext"), "/cast Spell 1850", "separate Dash binding is preserved")
     local primary, floating = _G.Speedster_SpeedButton, _G.SpeedsterFloatingButton
     equal(primary:GetAttribute("macrotext"), ns.getMacro(), "primary button receives conditional Dash")
     equal(floating:GetAttribute("macrotext"), ns.getMacro(), "floating button receives conditional Dash")
     forms = { 768 }
     ns.core.scripts.OnEvent(ns.core, "UPDATE_SHAPESHIFT_FORMS")
-    equal(primary:GetAttribute("macrotext"):find("/cast [form:1]Spell 1850;", 1, true), 1, "form-list event updates actual Cat slot")
+    equal(primary:GetAttribute("macrotext"):find("/cast [swimming]!Spell 1066;[form:1,noswimming]Spell 1850;", 1, true), 1, "form-list event updates Cat slot below swimming priority")
     ns.db.walk_on_air_while_falling = true
     movement.falling = true
     primary.scripts.PreClick(primary, "LeftButton", true)
     local falling = primary:GetAttribute("macrotext")
-    equal(falling:find("/cast [nocombat] !Spell 1259416\n/stopmacro [nocombat]\n/cast [form:1]Spell 1850;", 1, true), 1, "Walk on Air takes precedence over Cat Dash")
+    equal(falling:find("/cast [nocombat] !Spell 1259416\n/stopmacro [nocombat]\n/cast [swimming]!Spell 1066;[form:1,noswimming]Spell 1850;", 1, true), 1, "Walk on Air takes precedence over Cat Dash")
     movement.combat = true
     primary.scripts.PreClick(primary, "LeftButton", false)
     equal(primary:GetAttribute("macrotext"), falling, "combat preserves secure racial/Dash/form fallback")
     movement.combat, movement.falling = false, false
     ns.db.druid_use_travel = false
-    equal(ns.getMacro(), "/cast [form:1]Spell 1850;[swimming]!Spell 1066;!Spell 768", "grounded Cat-only preference retains aquatic selection")
+    equal(ns.getMacro(), "/cast [swimming]!Spell 1066;[form:1,noswimming]Spell 1850;!Spell 768", "grounded Cat-only preference retains aquatic selection")
     ns.db.druid_dash_in_cat = false
     equal(ns.getMacro(), "/cast [swimming]!Spell 1066;!Spell 768", "opt-out restores original form selection")
     ns.db.druid_dash_in_cat = true
@@ -163,7 +163,10 @@ do
     equal(ns.getMacro(), "/cast [swimming]!Spell 1066;!Spell 768", "unlearned Dash does not change behavior")
     known[1850] = true
     GetShapeshiftFormInfo = function() return 1, "Spell 768", true, true, 768 end
-    equal(ns.getMacro(), "/cast [form:1]Spell 1850;[swimming]!Spell 1066;!Spell 768", "legacy form info resolves Cat by spell or name")
+    equal(ns.getMacro(), "/cast [swimming]!Spell 1066;[form:1,noswimming]Spell 1850;!Spell 768", "legacy form info resolves Cat by spell or name")
+    known[1066] = nil
+    equal(ns.getMacro(), "/cast [form:1,noswimming]Spell 1850;!Spell 768", "unlearned Aquatic Form still prevents swimming Dash")
+    known[1066] = true
     forms = {}
     equal(ns.getMacro(), "/cast [swimming]!Spell 1066;!Spell 768", "unavailable form slot never guesses Cat index")
     ns.db.enabled = false
@@ -247,9 +250,9 @@ do
     C_Timer.After = function(_, fn) fn() end
     W.eventFrame.scripts.OnEvent(W.eventFrame, "PLAYER_ENTERING_WORLD")
     equal(W.frame ~= nil and W.frame.shown, true, "What's new shows after the update")
-    assert(wow.FindText("Speedster 1.4.1"), "it lists 1.4.1")
+    assert(wow.FindText("Speedster 1.4.2"), "it lists 1.4.2")
     assert(wow.FindButton("Open Speed"), "a button opens Speed")
-    equal(saved.hammerCore.whatsNewSeen, "1.4.1", "showing records the version")
+    equal(saved.hammerCore.whatsNewSeen, "1.4.2", "showing records the version")
     assert(HC.Commands.byName.whatsnew, "/speedster whatsnew is registered")
 
     local fresh = {}

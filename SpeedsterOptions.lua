@@ -94,7 +94,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
 
     local _, class = UnitClass("player")
     local classText = {
-        DRUID = "Aquatic Form in water, Cat Form indoors, Travel Form outdoors and Flight Form where flying is allowed. Already in Cat Form? Use Dash on the same key. Its separate key remains available.",
+        DRUID = "Aquatic Form in water, Cat Form indoors, Travel Form outdoors and Flight Form where flying is allowed. Already in Cat Form on land? Use Dash on the same key. Its separate key remains available.",
         SHAMAN = "Your speed key uses Ghost Wolf. Water Walking has its own optional key.",
         HUNTER = "Your speed key uses Aspect of the Cheetah once learned. Aspect of the Pack has its own optional key.",
         ROGUE = "Your speed key uses Sprint once learned.",
@@ -130,7 +130,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     end
     if class == "DRUID" then
         local dashRow
-        dashRow, cy = UI.Check(preferences, "Use Dash in Cat Form", "Requires learned Cat Form and Dash. Already in Cat Form, your speed key uses Dash. Walk on Air still takes priority while falling outside combat. A Dash on cooldown leaves your form alone.", cy,
+        dashRow, cy = UI.Check(preferences, "Use Dash in Cat Form", "Requires learned Cat Form and Dash. Already in Cat Form on land, your speed key uses Dash. Swimming takes Aquatic Form first. Walk on Air still takes priority while falling outside combat. A Dash on cooldown leaves your form alone.", cy,
             function() return ns.db.druid_dash_in_cat end,
             function(v)
                 if not ns.db.enabled then return end
