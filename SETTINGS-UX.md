@@ -1,5 +1,17 @@
 # Speedster settings UX audit
 
+## Matching binding columns, 2026-11-16
+
+The native Key Bindings page frames both Active bindings and Available, with
+matching heading insets, top anchors and heights. Wrapped help text reserves
+shared space above the rows and tiles, which stay inside their padded columns.
+
+## Native section dividers, 2026-11-16
+
+The Speed page uses subtle 1px bronze dividers between visible sections.
+Hidden class/racial groups leave no orphan lines; no leading or trailing line
+is drawn. The Modern presentation keeps its existing layout.
+
 ## Compact speed-key row, 2026-11-16
 
 The native Speed page places the assigned key in a dark, bronze-edged inset,

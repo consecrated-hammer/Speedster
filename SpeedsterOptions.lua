@@ -33,20 +33,35 @@ local function sections(panel, start)
         frame.hcRefresh, frame.hcRefreshAll = panel.hcRefresh, panel.hcRefreshAll
         frame.hcParentRow = parentRow
         UI.Columns(frame, columns)
-        groups[#groups + 1] = { frame = frame, visible = visible }
+        local divider
+        if T.IsBlizzard() then
+            divider = panel:CreateTexture(nil, "ARTWORK")
+            divider:SetColorTexture(0.66, 0.53, 0.34, 0.45)
+            divider:SetSize(UI.CONTENT_WIDTH, 1)
+            divider:Hide()
+        end
+        groups[#groups + 1] = { frame = frame, visible = visible, divider = divider }
         return frame, groups[#groups]
     end
     local function finish()
         local function layout()
-            local y = start
+            local y, hasPrevious = start, false
             for _, group in ipairs(groups) do
                 local shown = not group.visible or group.visible()
                 group.frame:SetShown(shown)
+                if group.divider then
+                    group.divider:SetShown(shown and hasPrevious)
+                    if shown and hasPrevious then
+                        group.divider:ClearAllPoints()
+                        group.divider:SetPoint("TOPLEFT", panel, "TOPLEFT", UI.PAD, y + 4)
+                    end
+                end
                 if shown then
                     group.frame:ClearAllPoints()
                     group.frame:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, y)
                     group.frame:SetHeight(group.height)
                     y = y - group.height - 8
+                    hasPrevious = true
                 end
             end
             if panel.hcSetBottom then panel.hcSetBottom(y) end
