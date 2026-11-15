@@ -1,5 +1,13 @@
 # Speedster settings UX audit
 
+## Compact speed-key row, 2026-11-16
+
+The native Speed page places the assigned key in a dark, bronze-edged inset,
+with larger gold text and Change directly beside it. The inset also opens Key
+Bindings on click; its tooltip shows the full binding when a long label is
+clipped. Unbound uses muted Not set and Set key. Existing binding labels,
+multiple-key updates, search registration and the Modern layout are preserved.
+
 ## Party-panel artwork follow-up, 2026-11-15
 
 The owner supplied the compact Party/raid-panel as the visual reference.

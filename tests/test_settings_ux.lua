@@ -46,7 +46,7 @@ for _, scale in ipairs({ 0.7, 1.3 }) do
         local status = row(HC, "Speed", "Speed key")
         local unset
         for _, region in ipairs(wow.regions) do
-            if region.parent == status and region:GetText() == "Not set" then unset = region end
+            if region.parent == (status.hcKeyWell or status) and region:GetText() == "Not set" then unset = region end
         end
         assert(unset, "Speed page explicitly shows no binding")
         eq(saved.enabled, true, "enabled survives page building")
@@ -130,7 +130,7 @@ do
     local status = row(HC, "Speed", "Speed key")
     local label
     for _, region in ipairs(wow.regions) do
-        if region.parent == status and region:GetText() == "F, G" then label = region end
+        if region.parent == (status.hcKeyWell or status) and region:GetText() == "F, G" then label = region end
     end
     assert(label, "Speed page shows every bound key while hidden")
     eq(row(HC, "Speed", "Set or change speed key"):GetText(), "Change", "bound action says Change")

@@ -70,13 +70,33 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
         function(v) ns.db.enabled = v; ns.refreshSpeedButton() end)
     local status = UI.Row(setup, sy, UI.CELL_H, "Speed key",
         "Your main movement binding. Open Key Bindings to set or change it.")
-    local keyText = UI.FontString(status, "GameFontHighlight")
+    local keyWell
+    if T.IsBlizzard() then
+        keyWell = CreateFrame("Button", nil, status, "BackdropTemplate")
+        keyWell:SetPoint("LEFT", status.Title, "RIGHT", 16, 0)
+        keyWell:SetSize(110, 30)
+        T.Surface(keyWell, "field", "edge")
+    end
+    local keyText = UI.FontString(keyWell or status, "GameFontHighlight")
     keyText:SetPoint("LEFT", status.Title, "RIGHT", 12, 0)
     local change = UI.Button(status, 90, 24)
     change:SetPoint("RIGHT", -UI.CELL_INSET, 0)
     change:SetScript("OnClick", function() HC.Settings:Show("Key Bindings") end)
-    keyText:SetPoint("RIGHT", change, "LEFT", -12, 0)
-    keyText:SetJustifyH("LEFT")
+    if keyWell then
+        keyWell:SetScript("OnClick", function() HC.Settings:Show("Key Bindings") end)
+        UI.AttachHint(keyWell, "Speed key", function() return keyText:GetText() .. "\nClick to change this binding." end)
+        keyText:ClearAllPoints()
+        keyText:SetPoint("LEFT", keyWell, "LEFT", 10, 0)
+        keyText:SetPoint("RIGHT", keyWell, "RIGHT", -10, 0)
+        T.Font(keyText, 14)
+        keyText:SetJustifyH("CENTER")
+        change:ClearAllPoints()
+        change:SetPoint("LEFT", keyWell, "RIGHT", 12, 0)
+        status.hcKeyWell = keyWell
+    else
+        keyText:SetPoint("RIGHT", change, "LEFT", -12, 0)
+        keyText:SetJustifyH("LEFT")
+    end
     if keyText.SetWordWrap then keyText:SetWordWrap(false) end
     UI.AttachHint(change, "Set or change speed key", "Open Key Bindings to set or change your main movement key.")
     UI.RegisterRow(setup, change, "Set or change speed key")
@@ -86,6 +106,10 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
         for _, key in ipairs(keys) do labels[#labels + 1] = HC.Bindings.Label(key) end
         keyText:SetText(#labels > 0 and table.concat(labels, ", ") or "Not set")
         change:SetText(#labels > 0 and "Change" or "Set key")
+        if keyWell then
+            keyWell:SetWidth(math.min(360, math.max(110, (keyText:GetStringWidth() or 0) + 24)))
+            T.Text(keyText, #labels > 0 and "accent" or "muted")
+        end
     end
     ns.RefreshSpeedKeyStatus = refreshKeyStatus
     UI.OnRefresh(panel, refreshKeyStatus)

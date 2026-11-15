@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Your speed key gets a proper framed binding, with Change beside it instead of across the room.
+
 - A little more Party-panel polish: opaque stone, bronze framing, compact gold tabs and clearer fields and sliders.
 
 - Speedster has gone native: Blizzard artwork across settings, menus, dialogs and the lore quiz.
