@@ -26,7 +26,7 @@ Speedster builds a movement macro for your class from the spells you know, and p
   - Paladin Blessing of Freedom, cast on yourself
   - Gnome Escape Artist
   - Skyborne Walk on Air and, for Windshapers, Skysight
-- **A floating button** you can click instead of using a key.
+- **An optional floating button** you can click instead of using a key. It starts disabled; enable it on Visibility.
 
 ## Getting started
 

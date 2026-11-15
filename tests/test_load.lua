@@ -30,7 +30,7 @@ for _, toc in ipairs(S.TOCS) do
     equal(ns.db.enabled, true, toc .. ": speed macro starts on")
     equal(ns.db.druid_use_travel, true, toc .. ": Travel Form starts on")
     equal(ns.db.shaman_use_ghost_wolf, true, toc .. ": Ghost Wolf starts on")
-    equal(ns.db.show_floating_button, true, toc .. ": floating button starts shown")
+    equal(ns.db.show_floating_button, false, toc .. ": floating button starts disabled")
     equal(ns.db.hide_on_flights, true, toc .. ": Hide on flights starts on")
     equal(ns.db.walk_on_air_while_falling, false, toc .. ": Walk on Air while falling starts off")
     equal(wow.LastPrint(), "Speedster v1.3.0 loaded - type /speedster for settings, /speedster help for commands",
@@ -52,7 +52,7 @@ for _, toc in ipairs(S.TOCS) do
     end
     equal(#ns.getUtilityActionIDs(), 9, toc .. ": nine extra movement actions")
     local floating = S.floating()
-    equal(floating:IsShown(), true, toc .. ": the floating button shows")
+    equal(floating:IsShown(), false, toc .. ": the floating button starts hidden")
     equal(floating:GetAttribute("type"), "macro", toc .. ": the floating button runs the same macro")
     local point, _, relativePoint, x, y = floating:GetPoint()
     equal(point .. relativePoint .. x .. y, "CENTERCENTER0-120", toc .. ": default floating position")

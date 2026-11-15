@@ -427,12 +427,12 @@ core:SetScript("OnEvent", function(_, event, ...)
 			enabled = true,
 			druid_use_travel = true,
 			shaman_use_ghost_wolf = true,
-			show_floating_button = true,
+			show_floating_button = false,
 		}
 		db = SpeedsterDB
 		ns.db = db
 		if db.show_floating_button == nil then
-			db.show_floating_button = true
+			db.show_floating_button = false
 		end
 		-- Flight-master form cancelling was Retail-only and is gone.
 		db.cancel_form_on_taxi = nil

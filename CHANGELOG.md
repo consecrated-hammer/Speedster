@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- The on-screen speed button starts off. Prefer a clickable bit of zoom? Enable it on Visibility. Existing choices are kept.
+
 - “Why is this settings input box not inputtable?” Excellent question. You can now type values beside settings sliders.
 
 ## [1.4.2] - 2026-11-14
