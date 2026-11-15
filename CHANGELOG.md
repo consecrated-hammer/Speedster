@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- A little more Party-panel polish: opaque stone, bronze framing, compact gold tabs and clearer fields and sliders.
+
 - Speedster has gone native: Blizzard artwork across settings, menus, dialogs and the lore quiz.
 - Update notes get their own matching Speedster window and wait their turn alongside other addon notices.
 

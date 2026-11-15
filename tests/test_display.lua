@@ -73,7 +73,7 @@ do
     local box = wow.FindText("/cast Spell 2983")
     assert(box, "Current macro shows the macro")
     equal(box.kind, "EditBox", "in a copyable box")
-    equal(box:GetHeight(), 40, "short generated macro fits a compact field")
+    equal(box:GetHeight(), 64, "native generated macro has a readable inset")
     SlashCmdList.SPEEDSTER("toggle")
     ns.db.enabled = false
     ns.refreshSpeedButton()
@@ -84,6 +84,14 @@ do
     box:SetText("edited")
     box.scripts.OnEscapePressed(box)
     equal(box:GetText(), "/cast Spell 2983", "Escape puts the macro back")
+end
+
+-- The native preview does not change the retained Modern macro layout.
+do
+    local _, HC = S.load({class="ROGUE",known=set(2983),modern=true})
+    HC.Settings:Show("Speed")
+    equal(HC.Theme.IsBlizzard(),false,"legacy presentation fixture")
+    equal(wow.FindText("/cast Spell 2983"):GetHeight(),40,"Modern macro retains original compact height")
 end
 
 -- The floating button: icon, tooltip, shift-drag and its saved spot.

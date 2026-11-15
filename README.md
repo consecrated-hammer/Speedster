@@ -99,3 +99,5 @@ GPL v3, see [LICENSE.txt](https://github.com/consecrated-hammer/Speedster/blob/m
 ## Blizzard presentation preview
 
 This development build uses Blizzard artwork across the complete Speedster interface, including menus, binding capture, diagnostic/link dialogs, the quiz and update notes. The native update notice waits alongside other addons’ existing notices. Saved appearance preferences and gameplay settings are preserved; this preview has no per-window skin switches. In-game texture/layout acceptance remains part of the trial.
+
+The Party-panel follow-up uses opaque stone backgrounds, bronze raid-panel framing and horizontal gold tabs in a compact window. Descriptions wrap, and the macro has a deeper readable inset.

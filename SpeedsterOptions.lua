@@ -163,14 +163,14 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     _, iy = UI.Header(inspect, "Current macro", iy, "Interface\\Icons\\INV_Misc_Note_01")
     _, iy = UI.Text(inspect, "What your speed key runs right now. Read-only.", iy)
     local macro = CreateFrame("EditBox", nil, inspect, "BackdropTemplate")
-    macro:SetSize(UI.CONTENT_WIDTH - 24, 40)
+    macro:SetSize(UI.CONTENT_WIDTH - 24, T.IsBlizzard() and 64 or 40)
     macro:SetPoint("TOPLEFT", UI.PAD + 12, iy)
     macro:SetAutoFocus(false)
     macro:SetMultiLine(true)
-    macro:SetFontObject(ChatFontNormal)
+    macro:SetFontObject(T.IsBlizzard() and GameFontHighlightSmall or ChatFontNormal)
     macro:SetTextInsets(8, 8, 8, 8)
-    T.Surface(macro, "rail", "edge")
-    local measure = UI.FontString(inspect, "ChatFontNormal")
+    T.Surface(macro, T.IsBlizzard() and "field" or "rail", "edge")
+    local measure = UI.FontString(inspect, T.IsBlizzard() and "GameFontHighlightSmall" or "ChatFontNormal")
     measure:SetWidth(UI.CONTENT_WIDTH - 40)
     measure:SetWordWrap(true)
     measure:Hide()
@@ -191,7 +191,8 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
         measure:SetText(text)
         local measured = measure:GetStringHeight() or 0
         measure:SetText("")
-        local height = math.max(40, measured + 16, lines * 14 + 16)
+        local padding = T.IsBlizzard() and 20 or 16
+        local height = math.max(T.IsBlizzard() and 64 or 40, measured + padding, lines * 14 + padding)
         macro:SetHeight(height)
         ig.height = -iy + height + 8
         updating = false

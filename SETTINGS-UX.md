@@ -1,5 +1,16 @@
 # Speedster settings UX audit
 
+## Party-panel artwork follow-up, 2026-11-15
+
+The owner supplied the compact Party/raid-panel as the visual reference.
+Settings now use horizontal gold-edged page tabs, an opaque stone interior,
+bronze raid-panel surround and a compact title bar in an 860x660 window. The
+existing pages and search remain; a redundant single-page subtab is hidden.
+Help text wraps, and the macro uses a minimum 64px dark inset and small game
+font. Shared dialogs and quiz inherit the same opaque stone/frame family.
+Gameplay and saved preferences remain unchanged; native visual acceptance is
+still required after staging.
+
 ## Blizzard presentation preview, 2026-11-15
 
 The complete addon now opts into HammerCore’s Blizzard presentation in its

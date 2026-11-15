@@ -27,7 +27,7 @@ function S.printedSince(from)
 end
 
 -- options: toc, saved, class, known (spell ID set), version, taxi (start on
--- a taxi), combat.
+-- a taxi), combat, modern (exercise the preserved legacy presentation).
 function S.load(options)
     options = options or {}
     local toc = options.toc or S.TOCS[1]
@@ -80,6 +80,7 @@ function S.load(options)
             end
         end
     end
+    if options.modern then ns.HammerCore.spec.presentation = nil end
     local core = _G.SpeedsterCore
     core.scripts.OnEvent(core, "ADDON_LOADED", "Speedster")
     return ns, ns.HammerCore, world
