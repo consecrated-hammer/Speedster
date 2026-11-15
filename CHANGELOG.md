@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Old-school stone or modern polish? Switch Classic / Modern from the settings header, with one UI reload. Your character remembers.
+
 - Your speed key gets a proper framed binding, with Change beside it instead of across the room.
 
 - A little more Party-panel polish: opaque stone, bronze framing, compact gold tabs and clearer fields and sliders.

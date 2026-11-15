@@ -1,5 +1,13 @@
 # Speedster settings UX audit
 
+## Modern / Classic switch, 2026-11-16
+
+The header shows Style: Classic or Style: Modern. Click to switch the whole
+addon, including lazy dialogs and menus, with a Reload UI / Cancel prompt.
+The choice is per character; cancel and combat rejection save nothing. Existing
+preview characters stay Classic until they choose Modern. Legacy theme values
+are preserved separately. Visibility search can find the header style control.
+
 ## Matching binding columns, 2026-11-16
 
 The native Key Bindings page frames both Active bindings and Available, with
@@ -36,9 +44,9 @@ still required after staging.
 The complete addon now opts into HammerCore’s Blizzard presentation in its
 Init spec. This covers shared settings, menus, binding capture, dialogs,
 reports, quiz and private update notes. Native action/minimap templates and
-gameplay behaviour are preserved. The preview is fixed for the session and
-preserves saved legacy theme values; there is no new theme page or per-window
-switch. Native update notes serialize with existing Modern notices instead of
+gameplay behaviour are preserved. The chosen presentation is fixed for the session and
+preserves saved legacy theme values; the header offers Modern / Classic with
+a reload. Native update notes serialize with existing Modern notices instead of
 contributing a section or renderer to the shared aggregate. In-client visual
 acceptance remains after staging. HammerCore’s docs/BLIZZARD-PRESENTATION.md
 owns the skin and notification contract.
@@ -85,7 +93,7 @@ Game bindings remain in the game's selected binding set, outside SavedVariables.
 | Show unread marker / What's new sound | Same section | A | `hammerCore.whatsNewDot`, `whatsNewSound`, unchanged |
 | Settings search / Show support links | Visibility: Settings window | S | `hammerCore.settingsSearch`, `supportLinks`, unchanged |
 | Header scale / window dragging | Shared header, 0.7 to 1.3 | S | `hammerCore.settingsScale`, `settingsPoint`, unchanged |
-| Theme | Existing hidden shared facility | A | The build opts into complete Blizzard presentation; legacy saved values remain intact |
+| Theme | Existing hidden shared facility | A | The header switches the whole addon between Classic and Modern after reload; legacy values remain intact |
 | What's new cards and settings links | Shared reference page | S | Existing seen/unread tracking; added development highlights link current pages |
 | Commands, Troubleshooting report, About/quiz/support links | Shared reference pages/footer | A | Existing commands and diagnostics retained; no gameplay settings moved there |
 | Reset all settings | Existing confirmed command | A | Existing full-reset/reload behaviour; no new page reset or schema |

@@ -54,7 +54,8 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
-    { version = "1.4.4", date = "2026-11-15", items = {
+    { version = "1.4.4", date = "2026-11-16", items = {
+        { title = "Pick your wardrobe", text = "Switch the whole addon between Classic and Modern from the settings header. A UI reload applies your character’s choice.", kind = "improved", page = "Visibility" },
         { title = "Borrowed Blizzard’s wardrobe", text = "Native artwork across Speedster’s settings, menus, dialogs and lore quiz. The speed key still does the running.", kind = "improved", page = "Speed" },
         { text = "Speedster’s update notes have their own matching window and wait their turn alongside your other addon notices.", kind = "improved", page = "Visibility" },
     } },
@@ -113,6 +114,7 @@ local WHATS_NEW = {
 HC:Init({
 	name = "Speedster",
 	presentation = "blizzard",
+	presentationSwitcher = true,
 	command = "speedster",
 	savedVariable = "SpeedsterDB",
 	db = function() return ns.db end,
