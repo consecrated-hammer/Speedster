@@ -1,5 +1,19 @@
 # Speedster settings UX audit
 
+## Blizzard presentation preview, 2026-11-15
+
+The complete addon now opts into HammerCore’s Blizzard presentation in its
+Init spec. This covers shared settings, menus, binding capture, dialogs,
+reports, quiz and private update notes. Native action/minimap templates and
+gameplay behaviour are preserved. The preview is fixed for the session and
+preserves saved legacy theme values; there is no new theme page or per-window
+switch. Native update notes serialize with existing Modern notices instead of
+contributing a section or renderer to the shared aggregate. In-client visual
+acceptance remains after staging. HammerCore’s docs/BLIZZARD-PRESENTATION.md
+owns the skin and notification contract.
+
+## Previous settings audit
+
 Reviewed 2026-11-13 from `eb89d9f` (v1.3.0), with a clean source checkout.
 HammerCore was 0.5.0 at `64e78b9`; the existing pushed settings branch at
 `3c1eeeb` provides the current 0.5.2 shell. This implementation adds only
@@ -40,7 +54,7 @@ Game bindings remain in the game's selected binding set, outside SavedVariables.
 | Show unread marker / What's new sound | Same section | A | `hammerCore.whatsNewDot`, `whatsNewSound`, unchanged |
 | Settings search / Show support links | Visibility: Settings window | S | `hammerCore.settingsSearch`, `supportLinks`, unchanged |
 | Header scale / window dragging | Shared header, 0.7 to 1.3 | S | `hammerCore.settingsScale`, `settingsPoint`, unchanged |
-| Theme | Existing hidden shared facility | A | Modern remains current; saved Classic fallback unchanged |
+| Theme | Existing hidden shared facility | A | The build opts into complete Blizzard presentation; legacy saved values remain intact |
 | What's new cards and settings links | Shared reference page | S | Existing seen/unread tracking; added development highlights link current pages |
 | Commands, Troubleshooting report, About/quiz/support links | Shared reference pages/footer | A | Existing commands and diagnostics retained; no gameplay settings moved there |
 | Reset all settings | Existing confirmed command | A | Existing full-reset/reload behaviour; no new page reset or schema |

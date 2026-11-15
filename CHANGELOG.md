@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Speedster has gone native: Blizzard artwork across settings, menus, dialogs and the lore quiz.
+- Update notes get their own matching Speedster window and wait their turn alongside other addon notices.
+
 ## [1.4.3] - 2026-11-15
 
 - The on-screen speed button starts off. Prefer a clickable bit of zoom? Enable it on Visibility. Existing choices are kept.

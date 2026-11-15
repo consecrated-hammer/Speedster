@@ -252,7 +252,7 @@ do
     equal(W.frame ~= nil and W.frame.shown, true, "What's new shows after the update")
     assert(wow.FindText("Speedster 1.4.3"), "it lists 1.4.3")
     assert(wow.FindButton("Open Speed"), "a button opens Speed")
-    equal(saved.hammerCore.whatsNewSeen, "1.4.3", "showing records the version")
+    equal(saved.hammerCore.whatsNewSeen, "1.4.4", "showing records the version")
     assert(HC.Commands.byName.whatsnew, "/speedster whatsnew is registered")
 
     local fresh = {}

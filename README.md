@@ -95,3 +95,7 @@ preference remains available to switch off if spell data is temporarily missing.
 ## Licence
 
 GPL v3, see [LICENSE.txt](https://github.com/consecrated-hammer/Speedster/blob/main/LICENSE.txt).
+
+## Blizzard presentation preview
+
+This development build uses Blizzard artwork across the complete Speedster interface, including menus, binding capture, diagnostic/link dialogs, the quiz and update notes. The native update notice waits alongside other addons’ existing notices. Saved appearance preferences and gameplay settings are preserved; this preview has no per-window skin switches. In-game texture/layout acceptance remains part of the trial.
