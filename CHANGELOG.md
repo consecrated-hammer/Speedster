@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-11-17
+
+- Cats get a second gear: Dash once, then press again for your outdoor form. Outside combat, Dash on cooldown is skipped; during combat, a failed Dash no longer traps the next press. The key and floating button share the step.
+
 ## [1.4.3] - 2026-11-15
 
 - The on-screen speed button starts off. Prefer a clickable bit of zoom? Enable it on Visibility. Existing choices are kept.

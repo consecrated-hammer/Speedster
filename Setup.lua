@@ -54,6 +54,9 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
+    { version = "1.4.4", date = "2026-11-17", items = {
+        { title = "Cats get a second gear", text = "Dash once, then press again for your outdoor form. Outside combat, Dash on cooldown is skipped; during combat, a failed Dash no longer traps the next press. The key and floating button share the step.", kind = "fixed", page = "Speed" },
+    } },
     { version = "1.4.3", date = "2026-11-15", items = {
         { title = "Zoom, without the furniture", text = "The on-screen speed button starts off for new settings. Enable it on Visibility if you want it; existing choices are kept.", page = "Visibility", kind = "improved" },
         { text = "“Why is this settings input box not inputtable?” Excellent question. You can now type values beside settings sliders.", kind = "improved" },
@@ -157,6 +160,12 @@ HC.Commands:Add({ name = "macro", section = "Speed", help = "Print the current s
 		if macro == "" then return HC.Print("no speed macro yet for this class and level") end
 		HC.Print("speed macro:")
 		for line in macro:gmatch("[^\n]+") do print(line) end
+        local bank = ns.movementBank
+        if bank and bank:GetAttribute("dash-enabled") then
+            HC.Print("prepared outdoor form action (shared Dash step):")
+            print(bank:GetAttribute("forms-macro") or "")
+            HC.Print("next Cat step: "..(bank:GetAttribute("dash-spent") and "outdoor form" or "Dash attempt; skipped on cooldown outside combat"))
+        end
 	end })
 HC.Commands:AddAction({ section = "Speed", usage = "Press your speed key", help = "Use the fastest known movement" })
 HC.Commands:AddAction({ section = "Speed", usage = "Click the floating button", help = "Use the speed key" })

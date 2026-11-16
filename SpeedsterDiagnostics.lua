@@ -26,6 +26,8 @@ function ns.BuildDiagnosticReport()
         "Enabled: " .. yesNo(db.enabled),
         "Walk on Air while falling: " .. yesNo(db.walk_on_air_while_falling),
         "Use Dash in Cat Form: " .. yesNo(db.druid_dash_in_cat),
+        "Movement action bank: " .. (ns.movementBank and "secure" or "unavailable; legacy action"),
+        "Cat next step: " .. ((not ns.movementBank or not ns.movementBank:GetAttribute("dash-enabled")) and "not applicable" or ns.movementBank:GetAttribute("dash-spent") and "outdoor form" or "Dash attempt / cooldown skip outside combat"),
         "Class: " .. tostring(select(2, UnitClass("player")) or "unknown"),
         "Primary binding: " .. tostring(ns.getBindingText and ns.getBindingText() or "unknown"),
         "Utility actions exposed: " .. tostring(#(ns.getUtilityActionIDs and ns.getUtilityActionIDs() or {})),

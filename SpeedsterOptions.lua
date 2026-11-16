@@ -94,7 +94,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
 
     local _, class = UnitClass("player")
     local classText = {
-        DRUID = "Aquatic Form in water, Cat Form indoors, Travel Form outdoors and Flight Form where flying is allowed. Already in Cat Form on land? Use Dash on the same key. Its separate key remains available.",
+        DRUID = "Aquatic Form in water, Cat Form indoors, Travel Form outdoors and Flight Form where flying is allowed. In Cat Form outdoors: Dash once, then your next press takes the outdoor form. Outside combat, an unavailable Dash is skipped. Its separate key remains available.",
         SHAMAN = "Your speed key uses Ghost Wolf. Water Walking has its own optional key.",
         HUNTER = "Your speed key uses Aspect of the Cheetah once learned. Aspect of the Pack has its own optional key.",
         ROGUE = "Your speed key uses Sprint once learned.",
@@ -130,7 +130,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     end
     if class == "DRUID" then
         local dashRow
-        dashRow, cy = UI.Check(preferences, "Use Dash in Cat Form", "Requires learned Cat Form and Dash. Already in Cat Form on land, your speed key uses Dash. Swimming takes Aquatic Form first. Walk on Air still takes priority while falling outside combat. A Dash on cooldown leaves your form alone.", cy,
+        dashRow, cy = UI.Check(preferences, "Use Dash in Cat Form", "Requires learned Cat Form and Dash. Outdoors with Travel Form enabled: attempt Dash once, then use the outdoor form on subsequent presses until you leave Cat. Outside combat, Dash on cooldown is skipped immediately. In combat, the next press advances even if Dash failed. Swimming and falling priorities remain.", cy,
             function() return ns.db.druid_dash_in_cat end,
             function(v)
                 if not ns.db.enabled then return end
@@ -161,7 +161,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     local inspect, ig = add(1)
     local iy = 0
     _, iy = UI.Header(inspect, "Current macro", iy, "Interface\\Icons\\INV_Misc_Note_01")
-    _, iy = UI.Text(inspect, "What your speed key runs right now. Read-only.", iy)
+    _, iy = UI.Text(inspect, "Prepared movement action. The speed key also tracks Dash then the outdoor form. Read-only.", iy)
     local macro = CreateFrame("EditBox", nil, inspect, "BackdropTemplate")
     macro:SetSize(UI.CONTENT_WIDTH - 24, 40)
     macro:SetPoint("TOPLEFT", UI.PAD + 12, iy)

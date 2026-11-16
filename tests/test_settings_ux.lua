@@ -94,7 +94,7 @@ do
     eq(S.switch("Use Travel Form outdoors").enabled, true, "saved unlearned preference can be disabled")
     wow.Click(S.switch("Use Travel Form outdoors"))
     eq(ns.db.druid_use_travel, false, "saved unlearned preference disabled")
-    eq(#HC.Settings:Search("Use Travel Form outdoors"), 0, "unlearned off control excluded")
+    eq(match(HC, "Use Travel Form outdoors", "Use Travel Form outdoors"), nil, "unlearned off control excluded")
     HC.Settings:Show("Visibility") -- learn while both owning pages are hidden
     known[783], known[1850], known[1259416] = true, true, true
     spellEvent(ns)
