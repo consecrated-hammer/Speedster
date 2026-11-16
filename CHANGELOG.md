@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Cats get a second gear: in Cat Form outdoors, attempt Dash once, then press again for the outdoor form. Outside combat, Dash on cooldown is skipped. During combat, a failed Dash no longer traps subsequent presses. The key and floating button share the same step.
+
 - Keeping up with the guild: a chat reminder flags newer stable releases seen in your group or guild. Configure Update reminders on Visibility; development and test builds stay quiet.
 
 - Old-school stone or modern polish? Switch Classic / Modern from the settings header, with one UI reload. Your character remembers.

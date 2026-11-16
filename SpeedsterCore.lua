@@ -29,6 +29,8 @@ local utilityActions = {
 local db
 local speedButton
 local floatingButton
+local movementBank
+local movementDriver
 local utilityButtons = {}
 local pendingRefresh
 local pendingFloatingReset
@@ -124,7 +126,7 @@ local function catFormIndex(catName)
 	end
 end
 
-local function buildClassMacro()
+local function buildClassMacro(skipDash)
 	if not db or not db.enabled then return "" end
 
 	local _, classFile = UnitClass("player")
@@ -137,10 +139,10 @@ local function buildClassMacro()
 		local clauses = {}
 		local dash = db.druid_dash_in_cat and cat and getSpellNameIfKnown(1850) or nil
 		local catIndex = dash and catFormIndex(cat)
-		-- One secure /cast chooses one clause: a failed Dash never falls through
-		-- into a form change, and active form checks still work during combat.
+		-- Each payload chooses one action. A secure shared bank selects the
+		-- Dash attempt or ordinary forms before the protected click.
 		if aquatic then clauses[#clauses + 1] = "[swimming]!"..aquatic end
-		if catIndex then clauses[#clauses + 1] = "[form:"..catIndex..",noswimming]"..dash end
+		if catIndex and not skipDash then clauses[#clauses + 1] = "[form:"..catIndex..",noswimming]"..dash end
 		if travel then
 			if cat then clauses[#clauses + 1] = "[indoors]!"..cat end
 			clauses[#clauses + 1] = "[flyable,nocombat]!"..(flight or travel)
@@ -168,8 +170,8 @@ local function buildClassMacro()
 	return ""
 end
 
-local function buildMacro()
-	local classMacro = buildClassMacro()
+local function buildMacro(skipDash)
+	local classMacro = buildClassMacro(skipDash)
 	if not db or not db.enabled or not db.walk_on_air_while_falling or InCombatLockdown()
 		or type(IsFalling) ~= "function" or not IsFalling() then return classMacro end
 	local walkOnAir = getSpellNameIfKnown(1259416)
@@ -182,13 +184,99 @@ end
 
 ns.getMacro = buildMacro
 
+-- Selection runs after the ordinary PreClick refresh and before the protected
+-- action. GetCVarBool/cooldown APIs are deliberately absent from this snippet.
+local BANK_SELECT = [[
+local useDown = self:GetAttribute("useOnKeyDown") and true or false
+if (down and true or false) ~= useDown then return end
+local macro = control:GetAttribute("dash-macro") or self:GetAttribute("macrotext") or ""
+local suppressed = self:GetAttribute("speedster-floating") and button == "LeftButton" and IsShiftKeyDown()
+local outOfCombat = SecureCmdOptionParse("[nocombat] yes; no") == "yes"
+local racial = control:GetAttribute("falling-racial") and outOfCombat
+local eligible = control:GetAttribute("dash-enabled") and SecureCmdOptionParse(control:GetAttribute("cat-condition")) == "yes"
+if eligible and not suppressed and not racial then
+    if control:GetAttribute("dash-spent") or (outOfCombat and not control:GetAttribute("dash-ready")) then
+        macro = control:GetAttribute("forms-macro") or macro
+    else
+        control:SetAttribute("dash-spent", true)
+    end
+end
+self:SetAttribute("macrotext", macro)
+]]
+
+local function dashReady()
+	local start, duration, enabled
+	if C_Spell and C_Spell.GetSpellCooldown then
+		local ok, info = pcall(C_Spell.GetSpellCooldown, 1850)
+		if ok and type(info) == "table" then start, duration, enabled = info.startTime, info.duration, info.isEnabled end
+	elseif type(GetSpellCooldown) == "function" then
+		local ok
+		ok, start, duration, enabled = pcall(GetSpellCooldown, 1850)
+		if not ok then start, duration, enabled = nil, nil, nil end
+	end
+	-- Unknown cooldown state permits one attempt, never a permanent block.
+	if start == nil or duration == nil then return true end
+	if issecretvalue and (issecretvalue(start) or issecretvalue(duration) or issecretvalue(enabled)) then return true end
+	if enabled == false or enabled == 0 then return false end
+	if type(start) ~= "number" or type(duration) ~= "number" then return true end
+	-- Dash has a long real cooldown; short reports here are the global cooldown.
+	if start == 0 or duration <= 1.5 then return true end
+	return type(GetTime) == "function" and start + duration <= GetTime()
+end
+
+local function attachMovementBank(button, floating)
+	if not movementBank then return end
+	button:SetAttribute("speedster-floating", floating == true)
+	button:SetAttribute("pressAndHoldAction", false)
+	-- A non-nil message is required for the secure wrapper's post-body to run.
+	SecureHandlerWrapScript(button, "PreClick", movementBank, "return nil, true", BANK_SELECT)
+end
+
 local function refreshPrimaryMacro()
 	if not speedButton or InCombatLockdown() then return end
 	local macro = buildMacro()
-	if speedButton:GetAttribute("macrotext") ~= macro then speedButton:SetAttribute("macrotext", macro) end
-	if floatingButton and floatingButton:GetAttribute("macrotext") ~= macro then
-		floatingButton:SetAttribute("macrotext", macro)
+	if not movementBank then
+		if speedButton:GetAttribute("macrotext") ~= macro then speedButton:SetAttribute("macrotext", macro) end
+		if floatingButton and floatingButton:GetAttribute("macrotext") ~= macro then floatingButton:SetAttribute("macrotext", macro) end
+		return
 	end
+	local _, class = UnitClass("player")
+	local cat = class == "DRUID" and getSpellNameIfKnown(768)
+	local index = cat and catFormIndex(cat)
+	local enabled = db.enabled and db.druid_dash_in_cat and db.druid_use_travel and index ~= nil
+		and getSpellNameIfKnown(1850) ~= nil and getSpellNameIfKnown(783) ~= nil
+	local driver = index and ("[form:"..index.."] cat; other") or "other"
+	if driver ~= movementDriver then
+		if movementDriver then UnregisterStateDriver(movementBank, "cat") end
+		movementBank:SetAttribute("dash-spent", false)
+		RegisterStateDriver(movementBank, "cat", driver)
+		movementDriver = driver
+	end
+	if movementBank:GetAttribute("dash-enabled") ~= (enabled == true) then movementBank:SetAttribute("dash-spent", false) end
+	movementBank:SetAttribute("dash-enabled", enabled == true)
+	movementBank:SetAttribute("cat-condition", index and ("[form:"..index..",noswimming,outdoors] yes; no") or "no")
+	movementBank:SetAttribute("dash-ready", dashReady())
+	local forms = buildMacro(true)
+	local changed = movementBank:GetAttribute("dash-macro") ~= macro or movementBank:GetAttribute("forms-macro") ~= forms
+	movementBank:SetAttribute("dash-macro", macro)
+	movementBank:SetAttribute("forms-macro", forms)
+	movementBank:SetAttribute("falling-racial", macro:find("/stopmacro [nocombat]", 1, true) ~= nil)
+	local useDown = type(GetCVarBool) == "function" and GetCVarBool("ActionButtonUseKeyDown") == true
+	for _, button in ipairs({ speedButton, floatingButton }) do
+		if button:GetAttribute("useOnKeyDown") ~= useDown then button:SetAttribute("useOnKeyDown", useDown) end
+		-- Initial/configuration payload only. The secure selector owns each
+		-- actual press; an ordinary refresh never resets its shared phase.
+		if changed or button:GetAttribute("macrotext") == "" then button:SetAttribute("macrotext", macro) end
+	end
+end
+
+local function preparePrimaryClick(self, button, down)
+	if movementBank and not InCombatLockdown() then
+		local useDown = type(GetCVarBool) == "function" and GetCVarBool("ActionButtonUseKeyDown") == true
+		if self:GetAttribute("useOnKeyDown") ~= useDown then self:SetAttribute("useOnKeyDown", useDown) end
+		if (down and true or false) ~= useDown then return end
+	end
+	refreshPrimaryMacro()
 end
 
 local function applyFloatingButtonPosition()
@@ -248,7 +336,8 @@ local function createFloatingButton()
 	floatingButton:SetAttribute("type", "macro")
 	floatingButton:SetAttribute("macrotext", "")
 	floatingButton:SetAttribute("shift-type1", "")
-	floatingButton:HookScript("PreClick", refreshPrimaryMacro)
+	floatingButton:HookScript("PreClick", preparePrimaryClick)
+	attachMovementBank(floatingButton, true)
 	local frameName = floatingButton:GetName()
 	local icon = _G[frameName.."Icon"]
 	if not icon then
@@ -447,11 +536,18 @@ core:SetScript("OnEvent", function(_, event, ...)
 			db.walk_on_air_while_falling = false
 		end
 
+		if select(2, UnitClass("player")) == "DRUID" and type(SecureHandlerWrapScript) == "function" and type(RegisterStateDriver) == "function" and type(UnregisterStateDriver) == "function" then
+			movementBank = CreateFrame("Frame", addon.."MovementBank", UIParent, "SecureHandlerStateTemplate")
+			movementBank:SetAttribute("dash-spent", false)
+			movementBank:SetAttribute("_onstate-cat", [[if newstate ~= "cat" then self:SetAttribute("dash-spent", false) end]])
+		end
+		ns.movementBank = movementBank
 		speedButton = CreateFrame("Button", buttonName, UIParent, "SecureActionButtonTemplate")
 		speedButton:RegisterForClicks("AnyUp", "AnyDown")
 		speedButton:SetAttribute("type", "macro")
 		speedButton:SetAttribute("macrotext", "")
-		speedButton:HookScript("PreClick", refreshPrimaryMacro)
+		speedButton:HookScript("PreClick", preparePrimaryClick)
+		attachMovementBank(speedButton, false)
 		speedButton:Hide()
 		for _, spec in ipairs(utilityActions) do
 			local utilityButton = CreateFrame("Button", buttonName.."_"..spec.id, UIParent, "SecureActionButtonTemplate")
@@ -477,6 +573,9 @@ core:SetScript("OnEvent", function(_, event, ...)
 		if pendingRefresh then
 			ns.refreshSpeedButton()
 		end
+	elseif event == "CVAR_UPDATE" then
+		local name = ...
+		if type(name) == "string" and name:lower():gsub("_", "") == "actionbuttonusekeydown" then ns.refreshSpeedButton() end
 	elseif event == "UPDATE_BINDINGS" then
 		if ns.db and ns.RefreshSpeedKeyStatus then ns.RefreshSpeedKeyStatus() end
 	elseif event == "UPDATE_SHAPESHIFT_FORMS"
@@ -492,6 +591,7 @@ core:RegisterEvent("PLAYER_REGEN_ENABLED")
 core:RegisterEvent("SPELLS_CHANGED")
 core:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
 core:RegisterEvent("UPDATE_BINDINGS")
+core:RegisterEvent("CVAR_UPDATE")
 for _, eventName in ipairs({
 	"LEARNED_SPELL_IN_TAB",
 	"LEARNED_SPELL_IN_SPELLBOOK",

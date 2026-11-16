@@ -31,3 +31,36 @@ conflicts, keyboard/mouse/wheel capture and saved-setting compatibility.
 Archive the installed runtime folder locally before staging for rollback;
 never touch WTF or SavedVariables. Staging and Syncthing delivery do not prove
 which build is loaded in game.
+
+
+## Dash / form action bank
+
+The main key and floating button share one SecureHandlerStateTemplate bank.
+Out-of-combat Lua prepares Dash-first and ordinary-form payloads, a dynamic Cat
+condition and cooldown availability. A secure PreClick wrapper selects the
+payload in its post-body, after the ordinary falling refresh and before the
+protected action. Its pre-body returns a non-nil message so the post-body runs.
+The restricted snippet uses macro-condition APIs and prepared attributes only;
+GetCVarBool and cooldown inspection stay outside it. A useOnKeyDown attribute
+keeps native action execution and sequence advancement on the same edge, even
+when a CVar change is deferred until combat ends. Utility bindings stay separate.
+
+With travel enabled/learned, the first eligible outdoor Cat press attempts Dash,
+then later presses retry ordinary forms until Cat is exited. Failed casts still
+advance. Outside combat a known unavailable Dash goes directly to forms.
+Combat never performs an arbitrary cooldown-dependent rewrite: its first Dash
+attempt may report cooldown, but the following press progresses. Swimming,
+falling-racial and Shift-drag actions do not spend the step. Ordinary refreshes
+never reset phase or re-register an unchanged state driver. Indoors or without
+travel the existing Cat/Dash action remains. API absence retains the legacy
+single action and is reported in diagnostics.
+
+Native contracts checked against Blizzard's Classic UI implementation:
+[secure wrapper dispatch](https://github.com/Gethe/wow-ui-source/blob/classic_era/Interface/AddOns/Blizzard_RestrictedAddOnEnvironment/SecureHandlers.lua),
+[restricted API whitelist](https://github.com/Gethe/wow-ui-source/blob/classic_era/Interface/AddOns/Blizzard_RestrictedAddOnEnvironment/RestrictedEnvironment.lua),
+[action click edges](https://github.com/Gethe/wow-ui-source/blob/classic_era/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua).
+These establish the implementation contract, not Forever runtime proof.
+Tests execute the actual snippet with a restricted whitelist, full down/up
+click lifecycle, failed-cast model, shared buttons and combat write guards.
+Forever acceptance still needs both input paths/CVar settings, combat, rapid
+Cat exit/re-entry and confirmation that no blocked-action/taint report appears.

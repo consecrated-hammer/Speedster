@@ -54,11 +54,12 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
-    { version = "1.4.4", date = "2026-11-16", items = {
+    { version = "1.4.4", date = "2026-11-17", items = {
         { title = "Pick your wardrobe", text = "Switch the whole addon between Classic and Modern from the settings header. A UI reload applies your character’s choice.", kind = "improved", page = "Visibility" },
         { title = "Borrowed Blizzard’s wardrobe", text = "Native artwork across Speedster’s settings, menus, dialogs and lore quiz. The speed key still does the running.", kind = "improved", page = "Speed" },
         { text = "Speedster’s update notes have their own matching window and wait their turn alongside your other addon notices.", kind = "improved", page = "Visibility" },
         { title = "Keeping up with the guild", text = "A chat reminder flags newer stable releases seen in your party, raid or guild. Configure Update reminders on Visibility. Development and test builds stay quiet.", kind = "improved", page = "Visibility" },
+        { title = "Cats get a second gear", text = "Dash once, then press again for your outdoor form. Outside combat, Dash on cooldown is skipped; during combat, a failed Dash no longer traps the next press. The key and floating button share the step.", kind = "fixed", page = "Speed" },
     } },
     { version = "1.4.3", date = "2026-11-15", items = {
         { title = "Zoom, without the furniture", text = "The on-screen speed button starts off for new settings. Enable it on Visibility if you want it; existing choices are kept.", page = "Visibility", kind = "improved" },
@@ -165,6 +166,12 @@ HC.Commands:Add({ name = "macro", section = "Speed", help = "Print the current s
 		if macro == "" then return HC.Print("no speed macro yet for this class and level") end
 		HC.Print("speed macro:")
 		for line in macro:gmatch("[^\n]+") do print(line) end
+        local bank = ns.movementBank
+        if bank and bank:GetAttribute("dash-enabled") then
+            HC.Print("prepared outdoor form action (shared Dash step):")
+            print(bank:GetAttribute("forms-macro") or "")
+            HC.Print("next Cat step: "..(bank:GetAttribute("dash-spent") and "outdoor form" or "Dash attempt; skipped on cooldown outside combat"))
+        end
 	end })
 HC.Commands:AddAction({ section = "Speed", usage = "Press your speed key", help = "Use the fastest known movement" })
 HC.Commands:AddAction({ section = "Speed", usage = "Click the floating button", help = "Use the speed key" })
