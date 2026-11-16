@@ -58,6 +58,7 @@ local WHATS_NEW = {
         { title = "Pick your wardrobe", text = "Switch the whole addon between Classic and Modern from the settings header. A UI reload applies your character’s choice.", kind = "improved", page = "Visibility" },
         { title = "Borrowed Blizzard’s wardrobe", text = "Native artwork across Speedster’s settings, menus, dialogs and lore quiz. The speed key still does the running.", kind = "improved", page = "Speed" },
         { text = "Speedster’s update notes have their own matching window and wait their turn alongside your other addon notices.", kind = "improved", page = "Visibility" },
+        { title = "Keeping up with the guild", text = "A chat reminder flags newer stable releases seen in your party, raid or guild. Configure Update reminders on Visibility. Development and test builds stay quiet.", kind = "improved", page = "Visibility" },
     } },
     { version = "1.4.3", date = "2026-11-15", items = {
         { title = "Zoom, without the furniture", text = "The on-screen speed button starts off for new settings. Enable it on Visibility if you want it; existing choices are kept.", page = "Visibility", kind = "improved" },

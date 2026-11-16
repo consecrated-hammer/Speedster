@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Keeping up with the guild: a chat reminder flags newer stable releases seen in your group or guild. Configure Update reminders on Visibility; development and test builds stay quiet.
+
 - Old-school stone or modern polish? Switch Classic / Modern from the settings header, with one UI reload. Your character remembers.
 
 - Your speed key gets a proper framed binding, with Change beside it instead of across the room.

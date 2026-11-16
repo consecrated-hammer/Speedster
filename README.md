@@ -104,3 +104,12 @@ The Party-panel follow-up uses opaque stone backgrounds, bronze raid-panel frami
 
 The settings header offers **Style: Classic / Modern**. Switching reloads the UI
 so every Speedster window uses the same look. Your choice is saved per character.
+
+### Update reminders
+
+Visibility > Updates > **Update reminders** tells you when another party, raid
+or guild member has a newer stable release. One chat reminder per login names
+the newer version and yours, with a pointer to CurseForge. Recent newer versions
+are remembered for up to 72 hours. This uses hidden addon messages, not a direct
+CurseForge check. Turning it off stops version sharing and reminders. Development,
+alpha, beta and test builds neither announce themselves nor show reminders.

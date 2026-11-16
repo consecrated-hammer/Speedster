@@ -36,7 +36,7 @@ for _, toc in ipairs(S.TOCS) do
     equal(wow.LastPrint(), "Speedster v1.3.0 loaded - type /speedster for settings, /speedster help for commands",
         toc .. ": login message")
     equal(HC.name, "Speedster", toc .. ": HammerCore knows the addon")
-    equal(HC.VERSION, "0.5.4", toc .. ": vendored HammerCore 0.5.4")
+    equal(HC.VERSION, "0.5.5", toc .. ": vendored HammerCore 0.5.5")
     equal(HC.Theme.IsBlizzard(), true, toc .. ": whole-addon Blizzard presentation")
     equal(ns.db.hammerCore.theme, "modern", toc .. ": saved legacy theme remains untouched")
 
