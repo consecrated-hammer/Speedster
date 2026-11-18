@@ -54,6 +54,10 @@ end
 -- HammerCore's tools/whatsnew_check.py fails the release without one. A
 -- `page` adds a button that opens that settings page.
 local WHATS_NEW = {
+    { version = "1.5.0", date = "2026-11-18", items = {
+        { title = "Time to zoom", text = "Equip Nifty Stopwatch and turn it on under Speed > Items to use it from your speed key when it’s ready.", kind = "new", page = "Speed", tab = "Items" },
+        { title = "Ready when you are", text = "Dash and the Stopwatch can pop up while you’re running and ready to use. Click either icon to use its action. Drag the gold grip to move the bar, or preview it under Visibility.", kind = "new", page = "Visibility" },
+    } },
     { version = "1.4.4", date = "2026-11-17", items = {
         { title = "Cats get a second gear", text = "Dash once, then press again for your outdoor form. Outside combat, Dash on cooldown is skipped; during combat, a failed Dash no longer traps the next press. The key and floating button share the step.", kind = "fixed", page = "Speed" },
     } },
