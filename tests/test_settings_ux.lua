@@ -12,6 +12,27 @@ local function match(HC, query, label)
 end
 local function spellEvent(ns) ns.core.scripts.OnEvent(ns.core, "SPELLS_CHANGED") end
 
+do
+    local ns, HC, world = S.load({ class = "WARRIOR" })
+    local equipped
+    local original = GetInventoryItemID
+    GetInventoryItemID = function(_, slot) return slot == 14 and equipped or nil end
+    HC.Settings:Show("Speed")
+    eq(match(HC, "Stopwatch", "Use Nifty Stopwatch"), nil, "unequipped item is absent from search")
+    equipped = 2820
+    ns.core.scripts.OnEvent(ns.core, "PLAYER_EQUIPMENT_CHANGED", 14)
+    assert(HC.Settings:Focus("Speed", "Use Nifty Stopwatch"), "search opens Items for equipped Stopwatch")
+    eq(HC.Settings.pages.Speed.selectedTab, "Items", "Stopwatch setting lives on Items")
+    wow.Click(S.switch("Use Nifty Stopwatch"))
+    eq(ns.db.use_nifty_stopwatch, true, "equipped item can be enabled")
+    equipped = nil
+    world.combat = true
+    ns.core.scripts.OnEvent(ns.core, "PLAYER_EQUIPMENT_CHANGED", 14)
+    eq(match(HC, "Stopwatch", "Use Nifty Stopwatch"), nil, "swap hides the item setting even during combat")
+    eq(ns.db.use_nifty_stopwatch, true, "swap retains item preference")
+    GetInventoryItemID = original
+end
+
 for _, scale in ipairs({ 0.7, 1.3 }) do
     for _, class in ipairs({ "DRUID", "SHAMAN", "HUNTER", "ROGUE", "MAGE", "PRIEST", "PALADIN", "WARRIOR" }) do
         local saved = { enabled = true, druid_use_travel = false, shaman_use_ghost_wolf = false,

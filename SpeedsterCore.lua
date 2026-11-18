@@ -16,6 +16,7 @@ ns.core = core
 local buttonName = addon.."_SpeedButton"
 local bindingCommand = "CLICK "..buttonName..":LeftButton"
 local STOPWATCH_ID = 2820
+local TRINKET_SLOTS = { 13, 14 }
 local STOPWATCH_CONDITION = "[nocombat,noswimming,nomounted]"
 local STOPWATCH_MACRO = "/use "..STOPWATCH_CONDITION.." item:"..STOPWATCH_ID
 local utilityActions = {
@@ -175,10 +176,18 @@ local function buildClassMacro(skipDash)
 	return ""
 end
 
+function ns.hasEquippedStopwatch()
+	if type(GetInventoryItemID) ~= "function" then return false end
+	for _, slot in ipairs(TRINKET_SLOTS) do
+		local item = GetInventoryItemID("player", slot)
+		if not (issecretvalue and issecretvalue(item)) and item == STOPWATCH_ID then return true end
+	end
+	return false
+end
+
 local function stopwatchReady()
 	if not db or not db.enabled or not db.use_nifty_stopwatch or onFlight or InCombatLockdown() then return false end
-	if type(GetInventoryItemID) ~= "function" then return false end
-	if GetInventoryItemID("player", 13) ~= STOPWATCH_ID and GetInventoryItemID("player", 14) ~= STOPWATCH_ID then return false end
+	if not ns.hasEquippedStopwatch() then return false end
 	local isUsable = C_Item and C_Item.IsUsableItem or IsUsableItem
 	if isUsable then
 		local usable = isUsable(STOPWATCH_ID)
@@ -701,8 +710,10 @@ core:SetScript("OnEvent", function(_, event, ...)
 		if type(name) == "string" and name:lower():gsub("_", "") == "actionbuttonusekeydown" then ns.refreshSpeedButton() end
 	elseif event == "UPDATE_BINDINGS" then
 		if ns.db and ns.RefreshSpeedKeyStatus then ns.RefreshSpeedKeyStatus() end
+	elseif event == "PLAYER_EQUIPMENT_CHANGED" then
+		ns.refreshSpeedButton()
+		if InCombatLockdown() and ns.refreshOptions then ns.refreshOptions() end
 	elseif event == "UPDATE_SHAPESHIFT_FORMS"
-	or event == "PLAYER_EQUIPMENT_CHANGED"
 	or event == "SPELLS_CHANGED"
 	or event == "LEARNED_SPELL_IN_TAB"
 	or event == "LEARNED_SPELL_IN_SPELLBOOK" then

@@ -58,7 +58,7 @@ local function sections(panel, start)
     return add, finish
 end
 
-HC.Settings:NewPage({ name = "Speed", description = "Choose your movement preferences, then set a key on Key Bindings." }, function(panel, y)
+local function buildSpeed(panel, y)
     local add, finish = sections(panel, y)
     local setup, group = add(1)
     local sy = 0
@@ -90,16 +90,8 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     ns.RefreshSpeedKeyStatus = refreshKeyStatus
     UI.OnRefresh(panel, refreshKeyStatus)
     sy = status.hcNextY
-    local stopwatch
-    stopwatch, sy = UI.Check(setup, "Use Nifty Stopwatch", "Use your equipped Stopwatch when it's ready, ahead of class movement. Skips the Stopwatch in combat, while swimming or while mounted. Walk on Air still comes first while falling.", sy,
-        function() return ns.db.use_nifty_stopwatch end,
-        function(v)
-            if not ns.db.enabled then return end
-            ns.db.use_nifty_stopwatch = v; ns.refreshSpeedButton()
-        end)
-    UI.OnRefresh(panel, function() UI.SetEnabled(stopwatch.hcCheckbox, ns.db.enabled) end)
     local reminders
-    reminders, sy = UI.Check(setup, "Show movement reminders", "Show ready icons for Dash and for Nifty Stopwatch if enabled above. The icons appear while running out of combat. Press your speed key to use the available action.", sy,
+    reminders, sy = UI.Check(setup, "Show movement reminders", "Show ready icons above screen center while running out of combat. Covers Dash and equipped items enabled under Items. Press your speed key to use the available action.", sy,
         function() return ns.db.show_movement_reminders end,
         function(v)
             if not ns.db.enabled then return end
@@ -194,7 +186,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
         if not ns.db.enabled then return "Speed key disabled. Enable it above to use your speed key." end
         local text = ns.getMacro()
         if text ~= "" then return text end
-        if ns.db.use_nifty_stopwatch then return "No movement action ready. Check your movement preferences, spells and equipped gear." end
+        if ns.db.use_nifty_stopwatch and ns.hasEquippedStopwatch() then return "No movement action ready. Check your movement preferences, spells and equipped gear." end
         return "No speed macro yet for this class and level. Learn a supported spell or check your movement preferences."
     end
     local updating
@@ -222,7 +214,28 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     render()
     ig.height = -iy + macro:GetHeight() + 8
     return finish()
-end)
+end
+
+local function buildItems(panel, y)
+    local add, finish = sections(panel, y)
+    local empty, emptyGroup = add(1, nil, function() return not ns.hasEquippedStopwatch() end)
+    local _, bottom = UI.Text(empty, "Equip a supported movement item to see its settings here.", 0)
+    emptyGroup.height = -bottom + 4
+    local items, itemGroup = add(1, nil, ns.hasEquippedStopwatch)
+    local stopwatch
+    stopwatch, bottom = UI.Check(items, "Use Nifty Stopwatch", "Use your equipped Stopwatch when it's ready, ahead of class movement. Skips the Stopwatch in combat, while swimming or while mounted. Walk on Air still comes first while falling.", 0,
+        function() return ns.db.use_nifty_stopwatch end,
+        function(v)
+            if not ns.db.enabled or not ns.hasEquippedStopwatch() then return end
+            ns.db.use_nifty_stopwatch = v; ns.refreshSpeedButton()
+        end)
+    UI.OnRefresh(panel, function() UI.SetEnabled(stopwatch.hcCheckbox, ns.db.enabled) end)
+    itemGroup.height = -UI.Flush(items, bottom) + 4
+    return finish()
+end
+
+HC.Settings:NewPage({ name = "Speed", description = "Choose your movement preferences, then set a key on Key Bindings.",
+    tabs = { { name = "Speed", build = buildSpeed }, { name = "Items", build = buildItems } } })
 
 local function actionItems(includeUnavailable)
     local items = {}

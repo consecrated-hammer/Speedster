@@ -10,8 +10,8 @@ per-action dynamic binding search and shared scale/report registrations to that 
 
 Before: Speed, Visibility, Key Bindings; shared reference pages.
 After: **Speed, Key Bindings, Visibility**; shared reference pages unchanged.
-There are no tabs, new pages or global advanced switch. Position remains
-with its three floating-button controls on Visibility.
+Speed has an Items tab for equipped movement items. Position remains with its
+three floating-button controls on Visibility.
 
 E = essential, S = standard, A = advanced. All addon keys remain per character.
 Game bindings remain in the game's selected binding set, outside SavedVariables.
