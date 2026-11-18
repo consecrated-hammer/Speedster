@@ -39,6 +39,9 @@ from the same key or floating button. Walk on Air still comes first while
 falling. The key skips the Stopwatch in combat, while swimming or mounted, and
 during a taxi flight. Turn on **Show movement reminders** to see ready icons for
 the Stopwatch and Cat Form Dash while running outside combat.
+Drag the grip above the icons to move the bar. **Visibility > Preview reminder
+bar** lets you position it while standing still, and the controls there set
+the direction, icon size and grip visibility.
 
 ## Commands
 

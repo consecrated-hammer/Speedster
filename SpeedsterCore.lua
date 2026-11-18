@@ -39,7 +39,6 @@ local utilityButtons = {}
 local pendingRefresh
 local pendingFloatingReset
 local onFlight
-local movementReminders = {}
 local reminderTimer
 local FLOATING_BUTTON_SIZE = 36
 local ICON_PATH = "Interface\\AddOns\\Speedster\\textures\\Speedster.tga"
@@ -288,30 +287,8 @@ local function dashReminderReady()
 	return dashReady(true)
 end
 
-local function showMovementReminder(label, texture, offset)
-	local reminder = movementReminders[label]
-	if offset and not reminder then
-		reminder = CreateFrame("Frame", nil, UIParent)
-		reminder:SetSize(32, 32)
-		local icon = reminder:CreateTexture(nil, "ARTWORK")
-		icon:SetAllPoints()
-		icon:SetTexture(texture)
-		local text = reminder:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		text:SetPoint("TOP", reminder, "BOTTOM", 0, -4)
-		text:SetText(label)
-		movementReminders[label] = reminder
-	end
-	if not reminder then return end
-	if offset and reminder.offset ~= offset then
-		reminder:ClearAllPoints()
-		reminder:SetPoint("CENTER", UIParent, "CENTER", offset, 95)
-		reminder.offset = offset
-	end
-	local shown = offset ~= nil
-	if reminder:IsShown() ~= shown then reminder:SetShown(shown) end
-end
-
 local function refreshMovementReminders()
+	if not db then return end
 	local canShow = db.enabled and db.show_movement_reminders and not onFlight and not InCombatLockdown()
 	local moving
 	if canShow and IsPlayerMoving then
@@ -323,10 +300,7 @@ local function refreshMovementReminders()
 	end
 	local show = moving and not (IsMounted and IsMounted()) and not (IsSwimming and IsSwimming())
 		and not (IsFalling and IsFalling()) and not (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
-	local stopwatch = show and stopwatchReady()
-	local dash = show and dashReminderReady()
-	showMovementReminder("Nifty Stopwatch ready", "Interface\\Icons\\INV_Misc_PocketWatch_01", stopwatch and (dash and -62 or 0) or nil)
-	showMovementReminder("Dash ready", "Interface\\Icons\\Ability_Druid_Dash", dash and (stopwatch and 62 or 0) or nil)
+	ns.renderMovementReminders(not not (show and stopwatchReady()), not not (show and dashReminderReady()))
 end
 
 local function updateMovementReminders()
@@ -660,6 +634,10 @@ core:SetScript("OnEvent", function(_, event, ...)
 		if type(db.druid_dash_in_cat) ~= "boolean" then db.druid_dash_in_cat = true end
 		if type(db.use_nifty_stopwatch) ~= "boolean" then db.use_nifty_stopwatch = false end
 		if type(db.show_movement_reminders) ~= "boolean" then db.show_movement_reminders = false end
+		if type(db.show_movement_reminder_handle) ~= "boolean" then db.show_movement_reminder_handle = true end
+		if type(db.movement_reminder_size) ~= "number" or not (db.movement_reminder_size >= 24 and db.movement_reminder_size <= 64) then
+			db.movement_reminder_size = 40
+		end
 		if type(db.hide_on_flights) ~= "boolean" then
 			db.hide_on_flights = true
 		end
@@ -697,6 +675,8 @@ core:SetScript("OnEvent", function(_, event, ...)
 		_G["BINDING_NAME_"..bindingCommand] = "Use speed key"
 
 		ns.refreshSpeedButton()
+	elseif event == "PLAYER_REGEN_DISABLED" then
+		refreshMovementReminders()
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		if pendingFloatingReset then
 			pendingFloatingReset = nil
@@ -704,6 +684,8 @@ core:SetScript("OnEvent", function(_, event, ...)
 		end
 		if pendingRefresh then
 			ns.refreshSpeedButton()
+		else
+			refreshMovementReminders()
 		end
 	elseif event == "CVAR_UPDATE" then
 		local name = ...
@@ -723,6 +705,7 @@ end)
 
 core:RegisterEvent("ADDON_LOADED")
 core:RegisterEvent("PLAYER_REGEN_ENABLED")
+core:RegisterEvent("PLAYER_REGEN_DISABLED")
 core:RegisterEvent("SPELLS_CHANGED")
 core:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
 core:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")

@@ -91,7 +91,7 @@ local function buildSpeed(panel, y)
     UI.OnRefresh(panel, refreshKeyStatus)
     sy = status.hcNextY
     local reminders
-    reminders, sy = UI.Check(setup, "Show movement reminders", "Show ready icons above screen center while running out of combat. Covers Dash and equipped items enabled under Items. Press your speed key to use the available action.", sy,
+    reminders, sy = UI.Check(setup, "Show movement reminders", "Show ready icons while running out of combat. Covers Dash and equipped items enabled under Items. The bar has a drag handle and a preview under Visibility.", sy,
         function() return ns.db.show_movement_reminders end,
         function(v)
             if not ns.db.enabled then return end
@@ -327,5 +327,20 @@ HC.spec.visibility = function(panel, y)
     end)
     _, y = UI.ActionButton(panel, y, "Re-centre button", function() HC.Commands:Dispatch("reset position") end,
         "Move only the floating button back to the centre. Keeps all settings, visibility choices and key bindings. Shift-left-drag to position it yourself.", nil, 200)
+    _, y = UI.Header(panel, "Movement reminders", y, ADDON_ICON)
+    _, y = UI.ActionButton(panel, y, "Preview reminder bar", ns.toggleMovementReminderPreview,
+        "Show or hide two sample icons. Drag the grip above the icons to move the bar.")
+    _, y = UI.Check(panel, "Show reminder drag handle", "Show the grip above the reminder icons. Right-click it to open the menu or Visibility, following your minimap right-click setting.", y,
+        function() return ns.db.show_movement_reminder_handle end,
+        function(v) ns.db.show_movement_reminder_handle = v; ns.renderMovementReminders() end)
+    _, y = UI.Dropdown(panel, "Reminder direction", nil, y, { "VERTICAL", "HORIZONTAL" }, { "Vertical", "Horizontal" },
+        function() return ns.db.movement_reminder_horizontal and "HORIZONTAL" or "VERTICAL" end,
+        function(v) ns.db.movement_reminder_horizontal = v == "HORIZONTAL"; ns.renderMovementReminders() end)
+    _, y = UI.Slider(panel, "Reminder icon size", nil, y, 24, 64, 2,
+        function() return ns.db.movement_reminder_size end,
+        function(v) ns.db.movement_reminder_size = v; ns.renderMovementReminders() end,
+        function(v) return v .. " px" end)
+    _, y = UI.ActionButton(panel, y, "Re-centre reminder bar", ns.resetMovementReminderPosition,
+        "Put the reminder bar back in its starting place above screen center.")
     return y
 end
