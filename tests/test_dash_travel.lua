@@ -2,12 +2,16 @@ local S = dofile('tests/support.lua')
 local eq = S.equal
 local wrappers, driver, secure, world, header
 local form, swimming, outdoors, shift, keyDown = 3, false, true, false, false
+local mounted = false
 local formList = { 5487, 1066, 768, 783 }
 local function evaluate(body, self, extra)
     local env = { self = self, control = header, button = extra and extra.button,
         down = extra and extra.down, newstate = extra and extra.newstate,
         IsShiftKeyDown = function() return shift end,
         SecureCmdOptionParse = function(condition)
+            if condition:find('noswimming,nomounted', 1, true) then
+                return not world.combat and not swimming and not mounted and 'yes' or 'no'
+            end
             if condition:find('nocombat', 1, true) then return not world.combat and 'yes' or 'no' end
             return condition:find('form:'..form, 1, true) and not swimming and outdoors and 'yes' or 'no'
         end }
@@ -107,6 +111,77 @@ for _, inputDown in ipairs({ false, true }) do
     eq(header:GetAttribute('dash-enabled'), false, 'form-only preference disables sequencing')
     ns.db.druid_use_travel = true; ns.refreshSpeedButton()
 end
+local trinket, itemDuration = 2820, 0
+local speed = 0
+local originalMounted, originalTicker = IsMounted, C_Timer.NewTicker
+GetUnitSpeed = function() return speed end
+GetShapeshiftForm = function() return form end
+IsMounted = function() return mounted end
+IsSwimming = function() return swimming end
+local tick, cancelled
+C_Timer.NewTicker = function(_, callback)
+    tick = callback
+    return { Cancel = function() cancelled = true end }
+end
+GetInventoryItemID = function(_, slot) return slot == 14 and trinket or nil end
+C_Item = { GetItemCooldown = function(itemID)
+    eq(itemID, 2820, 'checks the equipped Stopwatch cooldown')
+    return itemDuration > 0 and world.clock or 0, itemDuration, 1
+end }
+setForm(4); setForm(3); cd = 0
+assert(not ns.db.use_nifty_stopwatch, 'existing characters opt in to Stopwatch')
+ns.db.use_nifty_stopwatch = true
+ns.db.show_movement_reminders = true
+ns.refreshSpeedButton()
+speed = 7; tick()
+local reminder = assert(S.wow.FindText('Nifty Stopwatch ready')):GetParent()
+local dashReminder = assert(S.wow.FindText('Dash ready')):GetParent()
+assert(reminder:IsShown(), 'ready Stopwatch shows while moving')
+assert(dashReminder:IsShown(), 'ready Cat Dash shows beside the Stopwatch')
+setForm(4); tick()
+assert(not dashReminder:IsShown(), 'Dash reminder requires Cat Form')
+setForm(3); cd = 120; tick()
+assert(not dashReminder:IsShown(), 'Dash cooldown hides its reminder')
+cd = 0; tick()
+assert(dashReminder:IsShown(), 'Dash cooldown expiry while moving restores the reminder')
+speed = 0; tick()
+assert(not reminder:IsShown(), 'standing hides Stopwatch reminder')
+speed = 7
+itemDuration = 360; tick()
+assert(not reminder:IsShown(), 'item cooldown hides the ready reminder')
+itemDuration = 0; tick()
+assert(reminder:IsShown(), 'cooldown expiration shows the reminder without restarting movement')
+local itemMacro = press(primary)
+assert(itemMacro:find('/use [nocombat,noswimming,nomounted] item:2820', 1, true))
+eq(header:GetAttribute('dash-spent'), false, 'Stopwatch preserves the next Dash press')
+assert(press(floating):find('item:2820', 1, true), 'floating button uses the same item')
+for _, state in ipairs({ 'swimming', 'mounted', 'falling' }) do
+    setForm(4); setForm(3)
+    swimming, mounted, world.falling = state == 'swimming', state == 'mounted', state == 'falling'
+    ns.db.walk_on_air_while_falling = world.falling
+    local macro = press(primary)
+    if world.falling then assert(macro:find('/cast [nocombat]', 1, true) == 1, 'falling racial comes before item') end
+    if not mounted then eq(header:GetAttribute('dash-spent'), false, state .. ' preserves Dash') end
+end
+swimming, mounted, world.falling = false, false, false
+setForm(4); setForm(3); press(primary)
+world.combat = true
+press(primary)
+eq(header:GetAttribute('dash-spent'), true, 'frozen item macro falls through to Dash in combat')
+world.combat = false
+itemDuration = 360
+assert(not press(primary):find('item:2820', 1, true), 'cooldown skips the item')
+itemDuration, trinket = 0, 999
+assert(not press(primary):find('item:2820', 1, true), 'replacement trinket is never selected')
+trinket = 2820
+C_Item.IsUsableItem = function() return false end
+assert(not press(primary):find('item:2820', 1, true), 'unusable Stopwatch does not replace movement')
+ns.db.use_nifty_stopwatch = false
+ns.db.show_movement_reminders = false
+ns.refreshSpeedButton()
+assert(cancelled and not reminder:IsShown() and not dashReminder:IsShown(), 'turning reminders off hides the row and cancels polling')
+C_Item, GetInventoryItemID, GetUnitSpeed, GetShapeshiftForm, IsSwimming = nil, nil, nil, nil, nil
+IsMounted, C_Timer.NewTicker = originalMounted, originalTicker
 -- Changing the CVar in combat cannot create mismatched edge selection.
 world.combat = true; keyDown = not keyDown
 ns.core.scripts.OnEvent(ns.core, 'CVAR_UPDATE', 'ACTION_BUTTON_USE_KEY_DOWN')
@@ -137,5 +212,13 @@ local rogue = S.load({ class = 'ROGUE', known = { [2983] = true }, saved = { ena
 eq(rogue.movementBank, nil, 'non-druid does not create or depend on movement bank')
 eq(wrappers[S.primary()], nil, 'non-druid keeps original click handler')
 eq(S.primary():GetAttribute('macrotext'), '/cast Spell 2983', 'non-druid movement action preserved')
+rogue.db.use_nifty_stopwatch = true
+GetInventoryItemID = function(_, slot) return slot == 13 and 2820 or nil end
+GetItemCooldown = function() return 0, 0, 1 end
+rogue.refreshSpeedButton()
+local rogueMacro = S.primary():GetAttribute('macrotext')
+assert(rogueMacro:find('item:2820', 1, true) and rogueMacro:find('/cast Spell 2983', 1, true),
+    'non-druid keeps Sprint as fallback when using legacy item cooldown API')
+GetInventoryItemID, GetItemCooldown = nil, nil
 SecureHandlerWrapScript, RegisterStateDriver, UnregisterStateDriver, GetCVarBool = nil, nil, nil, nil
 io.write('test_dash_travel: ok\n')

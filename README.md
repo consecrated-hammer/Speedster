@@ -34,6 +34,12 @@ Speedster builds a movement macro for your class from the spells you know, and p
 2. On **Key Bindings**, choose **Speed key** under **Primary speed key**, then press a keyboard key, mouse button or wheel. Shift, Ctrl and Alt combinations work too. Nothing is bound until you choose it.
 3. On **Speed**, choose any class or racial preferences. The read-only **Current macro** shows what Speedster generates; there's nothing to copy. **Visibility** controls the floating button and minimap.
 
+Enable **Use Nifty Stopwatch** on **Speed** to use an equipped, ready Stopwatch
+from the same key or floating button. Walk on Air still comes first while
+falling. The key skips the Stopwatch in combat, while swimming or mounted, and
+during a taxi flight. Turn on **Show movement reminders** to see ready icons for
+the Stopwatch and Cat Form Dash while running outside combat.
+
 ## Commands
 
 | Command | What it does |

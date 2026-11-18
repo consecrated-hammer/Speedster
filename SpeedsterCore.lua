@@ -15,6 +15,9 @@ ns.core = core
 
 local buttonName = addon.."_SpeedButton"
 local bindingCommand = "CLICK "..buttonName..":LeftButton"
+local STOPWATCH_ID = 2820
+local STOPWATCH_CONDITION = "[nocombat,noswimming,nomounted]"
+local STOPWATCH_MACRO = "/use "..STOPWATCH_CONDITION.." item:"..STOPWATCH_ID
 local utilityActions = {
 	{ id = "druidDash", label = "Dash", spellIDs = { 1850 } },
 	{ id = "hunterPack", label = "Aspect of the Pack", spellIDs = { 13159 }, warning = "Group travel only: taking damage dazes affected party members." },
@@ -35,6 +38,8 @@ local utilityButtons = {}
 local pendingRefresh
 local pendingFloatingReset
 local onFlight
+local movementReminders = {}
+local reminderTimer
 local FLOATING_BUTTON_SIZE = 36
 local ICON_PATH = "Interface\\AddOns\\Speedster\\textures\\Speedster.tga"
 local FALLBACK_ICON_PATH = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -170,19 +175,56 @@ local function buildClassMacro(skipDash)
 	return ""
 end
 
-local function buildMacro(skipDash)
-	local classMacro = buildClassMacro(skipDash)
-	if not db or not db.enabled or not db.walk_on_air_while_falling or InCombatLockdown()
-		or type(IsFalling) ~= "function" or not IsFalling() then return classMacro end
-	local walkOnAir = getSpellNameIfKnown(1259416)
-	if not walkOnAir then return classMacro end
-	-- This may remain installed when combat starts. The secure conditions skip
-	-- the racial and retain the original class action without rewriting buttons.
-	local macro = "/cast [nocombat] !"..walkOnAir.."\n/stopmacro [nocombat]"
-	return classMacro ~= "" and macro.."\n"..classMacro or macro
+local function stopwatchReady()
+	if not db or not db.enabled or not db.use_nifty_stopwatch or onFlight or InCombatLockdown() then return false end
+	if type(GetInventoryItemID) ~= "function" then return false end
+	if GetInventoryItemID("player", 13) ~= STOPWATCH_ID and GetInventoryItemID("player", 14) ~= STOPWATCH_ID then return false end
+	local isUsable = C_Item and C_Item.IsUsableItem or IsUsableItem
+	if isUsable then
+		local usable = isUsable(STOPWATCH_ID)
+		if (issecretvalue and issecretvalue(usable)) or usable ~= true then return false end
+	end
+
+	local cooldown = C_Item and C_Item.GetItemCooldown or GetItemCooldown
+	if not cooldown then return false end
+	local start, duration, enabled = cooldown(STOPWATCH_ID)
+	if issecretvalue and (issecretvalue(start) or issecretvalue(duration) or issecretvalue(enabled)) then return false end
+	if enabled ~= 1 and enabled ~= true then return false end
+	return type(start) == "number" and type(duration) == "number"
+		and (start == 0 or start + duration <= GetTime())
 end
 
-ns.getMacro = buildMacro
+local function buildMacro(skipDash, useStopwatch)
+	local classMacro = buildClassMacro(skipDash)
+	local itemMacro = classMacro
+	if useStopwatch then
+		itemMacro = STOPWATCH_MACRO
+		if classMacro ~= "" then itemMacro = itemMacro.."\n/stopmacro "..STOPWATCH_CONDITION.."\n"..classMacro end
+	end
+	local racialMacro = ""
+	if not db or not db.enabled or not db.walk_on_air_while_falling or InCombatLockdown()
+		or type(IsFalling) ~= "function" or not IsFalling() then
+		return #itemMacro <= 255 and itemMacro or classMacro
+	end
+	local walkOnAir = getSpellNameIfKnown(1259416)
+	if walkOnAir then
+		-- A frozen combat payload skips the racial without rewriting protected attributes.
+		racialMacro = "/cast [nocombat] !"..walkOnAir.."\n/stopmacro [nocombat]"
+	end
+	if #itemMacro + #racialMacro + 1 > 255 then itemMacro = classMacro end
+	if racialMacro == "" then return itemMacro end
+	return itemMacro ~= "" and racialMacro.."\n"..itemMacro or racialMacro
+end
+
+function ns.getMacro()
+	local ready = stopwatchReady()
+	local macro = buildMacro(false, ready and not movementBank)
+	if ready and movementBank and SecureCmdOptionParse(movementBank:GetAttribute("stopwatch-condition")) == "yes"
+		and not macro:find("/stopmacro [nocombat]", 1, true) then
+		return STOPWATCH_MACRO
+	end
+	return macro
+end
 
 -- Selection runs after the ordinary PreClick refresh and before the protected
 -- action. GetCVarBool/cooldown APIs are deliberately absent from this snippet.
@@ -193,8 +235,11 @@ local macro = control:GetAttribute("dash-macro") or self:GetAttribute("macrotext
 local suppressed = self:GetAttribute("speedster-floating") and button == "LeftButton" and IsShiftKeyDown()
 local outOfCombat = SecureCmdOptionParse("[nocombat] yes; no") == "yes"
 local racial = control:GetAttribute("falling-racial") and outOfCombat
+local stopwatch = control:GetAttribute("stopwatch-ready") and SecureCmdOptionParse(control:GetAttribute("stopwatch-condition")) == "yes"
 local eligible = control:GetAttribute("dash-enabled") and SecureCmdOptionParse(control:GetAttribute("cat-condition")) == "yes"
-if eligible and not suppressed and not racial then
+if stopwatch and not suppressed and not racial then
+    macro = control:GetAttribute("stopwatch-macro")
+elseif eligible and not suppressed and not racial then
     if control:GetAttribute("dash-spent") or (outOfCombat and not control:GetAttribute("dash-ready")) then
         macro = control:GetAttribute("forms-macro") or macro
     else
@@ -204,7 +249,7 @@ end
 self:SetAttribute("macrotext", macro)
 ]]
 
-local function dashReady()
+local function dashReady(requireKnown)
 	local start, duration, enabled
 	if C_Spell and C_Spell.GetSpellCooldown then
 		local ok, info = pcall(C_Spell.GetSpellCooldown, 1850)
@@ -215,13 +260,74 @@ local function dashReady()
 		if not ok then start, duration, enabled = nil, nil, nil end
 	end
 	-- Unknown cooldown state permits one attempt, never a permanent block.
-	if start == nil or duration == nil then return true end
-	if issecretvalue and (issecretvalue(start) or issecretvalue(duration) or issecretvalue(enabled)) then return true end
+	if start == nil or duration == nil then return not requireKnown end
+	if issecretvalue and (issecretvalue(start) or issecretvalue(duration) or issecretvalue(enabled)) then return not requireKnown end
 	if enabled == false or enabled == 0 then return false end
-	if type(start) ~= "number" or type(duration) ~= "number" then return true end
+	if type(start) ~= "number" or type(duration) ~= "number" then return not requireKnown end
 	-- Dash has a long real cooldown; short reports here are the global cooldown.
 	if start == 0 or duration <= 1.5 then return true end
 	return type(GetTime) == "function" and start + duration <= GetTime()
+end
+
+local function dashReminderReady()
+	if not db.druid_dash_in_cat or not GetShapeshiftForm then return false end
+	local cat = getSpellNameIfKnown(768)
+	local index = cat and catFormIndex(cat)
+	if not index or GetShapeshiftForm() ~= index or not isSpellKnownSafe(1850) then return false end
+	if movementBank and movementBank:GetAttribute("dash-enabled") and movementBank:GetAttribute("dash-spent")
+		and SecureCmdOptionParse(movementBank:GetAttribute("cat-condition")) == "yes" then return false end
+	return dashReady(true)
+end
+
+local function showMovementReminder(label, texture, offset)
+	local reminder = movementReminders[label]
+	if offset and not reminder then
+		reminder = CreateFrame("Frame", nil, UIParent)
+		reminder:SetSize(32, 32)
+		local icon = reminder:CreateTexture(nil, "ARTWORK")
+		icon:SetAllPoints()
+		icon:SetTexture(texture)
+		local text = reminder:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		text:SetPoint("TOP", reminder, "BOTTOM", 0, -4)
+		text:SetText(label)
+		movementReminders[label] = reminder
+	end
+	if not reminder then return end
+	if offset and reminder.offset ~= offset then
+		reminder:ClearAllPoints()
+		reminder:SetPoint("CENTER", UIParent, "CENTER", offset, 95)
+		reminder.offset = offset
+	end
+	local shown = offset ~= nil
+	if reminder:IsShown() ~= shown then reminder:SetShown(shown) end
+end
+
+local function refreshMovementReminders()
+	local canShow = db.enabled and db.show_movement_reminders and not onFlight and not InCombatLockdown()
+	local moving
+	if canShow and IsPlayerMoving then
+		moving = IsPlayerMoving()
+		moving = not (issecretvalue and issecretvalue(moving)) and moving == true
+	elseif canShow and GetUnitSpeed then
+		local speed = GetUnitSpeed("player")
+		moving = type(speed) == "number" and not (issecretvalue and issecretvalue(speed)) and speed > 0
+	end
+	local show = moving and not (IsMounted and IsMounted()) and not (IsSwimming and IsSwimming())
+		and not (IsFalling and IsFalling()) and not (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
+	local stopwatch = show and stopwatchReady()
+	local dash = show and dashReminderReady()
+	showMovementReminder("Nifty Stopwatch ready", "Interface\\Icons\\INV_Misc_PocketWatch_01", stopwatch and (dash and -62 or 0) or nil)
+	showMovementReminder("Dash ready", "Interface\\Icons\\Ability_Druid_Dash", dash and (stopwatch and 62 or 0) or nil)
+end
+
+local function updateMovementReminders()
+	if db.enabled and db.show_movement_reminders and C_Timer and C_Timer.NewTicker then
+		if not reminderTimer then reminderTimer = C_Timer.NewTicker(0.25, refreshMovementReminders) end
+	elseif reminderTimer then
+		reminderTimer:Cancel()
+		reminderTimer = nil
+	end
+	refreshMovementReminders()
 end
 
 local function attachMovementBank(button, floating)
@@ -234,7 +340,8 @@ end
 
 local function refreshPrimaryMacro()
 	if not speedButton or InCombatLockdown() then return end
-	local macro = buildMacro()
+	local useStopwatch = stopwatchReady()
+	local macro = buildMacro(false, not movementBank and useStopwatch)
 	if not movementBank then
 		if speedButton:GetAttribute("macrotext") ~= macro then speedButton:SetAttribute("macrotext", macro) end
 		if floatingButton and floatingButton:GetAttribute("macrotext") ~= macro then floatingButton:SetAttribute("macrotext", macro) end
@@ -257,6 +364,7 @@ local function refreshPrimaryMacro()
 	movementBank:SetAttribute("dash-enabled", enabled == true)
 	movementBank:SetAttribute("cat-condition", index and ("[form:"..index..",noswimming,outdoors] yes; no") or "no")
 	movementBank:SetAttribute("dash-ready", dashReady())
+	movementBank:SetAttribute("stopwatch-ready", useStopwatch)
 	local forms = buildMacro(true)
 	local changed = movementBank:GetAttribute("dash-macro") ~= macro or movementBank:GetAttribute("forms-macro") ~= forms
 	movementBank:SetAttribute("dash-macro", macro)
@@ -418,6 +526,7 @@ end
 
 function ns.refreshSpeedButton()
 	if not speedButton then return end
+	updateMovementReminders()
 	if InCombatLockdown() then
 		pendingRefresh = true
 		return
@@ -540,6 +649,8 @@ core:SetScript("OnEvent", function(_, event, ...)
 			db.shaman_use_ghost_wolf = true
 		end
 		if type(db.druid_dash_in_cat) ~= "boolean" then db.druid_dash_in_cat = true end
+		if type(db.use_nifty_stopwatch) ~= "boolean" then db.use_nifty_stopwatch = false end
+		if type(db.show_movement_reminders) ~= "boolean" then db.show_movement_reminders = false end
 		if type(db.hide_on_flights) ~= "boolean" then
 			db.hide_on_flights = true
 		end
@@ -550,6 +661,8 @@ core:SetScript("OnEvent", function(_, event, ...)
 		if select(2, UnitClass("player")) == "DRUID" and type(SecureHandlerWrapScript) == "function" and type(RegisterStateDriver) == "function" and type(UnregisterStateDriver) == "function" then
 			movementBank = CreateFrame("Frame", addon.."MovementBank", UIParent, "SecureHandlerStateTemplate")
 			movementBank:SetAttribute("dash-spent", false)
+			movementBank:SetAttribute("stopwatch-condition", STOPWATCH_CONDITION.." yes; no")
+			movementBank:SetAttribute("stopwatch-macro", STOPWATCH_MACRO)
 			movementBank:SetAttribute("_onstate-cat", [[if newstate ~= "cat" then self:SetAttribute("dash-spent", false) end]])
 		end
 		ns.movementBank = movementBank
@@ -589,6 +702,7 @@ core:SetScript("OnEvent", function(_, event, ...)
 	elseif event == "UPDATE_BINDINGS" then
 		if ns.db and ns.RefreshSpeedKeyStatus then ns.RefreshSpeedKeyStatus() end
 	elseif event == "UPDATE_SHAPESHIFT_FORMS"
+	or event == "PLAYER_EQUIPMENT_CHANGED"
 	or event == "SPELLS_CHANGED"
 	or event == "LEARNED_SPELL_IN_TAB"
 	or event == "LEARNED_SPELL_IN_SPELLBOOK" then
@@ -600,6 +714,7 @@ core:RegisterEvent("ADDON_LOADED")
 core:RegisterEvent("PLAYER_REGEN_ENABLED")
 core:RegisterEvent("SPELLS_CHANGED")
 core:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
+core:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 core:RegisterEvent("UPDATE_BINDINGS")
 core:RegisterEvent("CVAR_UPDATE")
 for _, eventName in ipairs({

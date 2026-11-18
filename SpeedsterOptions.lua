@@ -63,7 +63,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     local setup, group = add(1)
     local sy = 0
     _, sy = UI.Header(setup, "Your speed key", sy, ADDON_ICON)
-    _, sy = UI.Text(setup, "Press your speed key or click the floating button to use a known movement spell. Nothing casts automatically.", sy)
+    _, sy = UI.Text(setup, "Press your speed key or click the floating button to use a movement action. Nothing casts automatically.", sy)
     local master
     master, sy = UI.Check(setup, "Enable speed key", "Turns your speed key and the floating button on or off. Extra keys are separate. Changes in combat apply afterwards.", sy,
         function() return ns.db.enabled end,
@@ -90,7 +90,23 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     ns.RefreshSpeedKeyStatus = refreshKeyStatus
     UI.OnRefresh(panel, refreshKeyStatus)
     sy = status.hcNextY
-    group.height = -sy + 4
+    local stopwatch
+    stopwatch, sy = UI.Check(setup, "Use Nifty Stopwatch", "Use your equipped Stopwatch when it's ready, ahead of class movement. Skips the Stopwatch in combat, while swimming or while mounted. Walk on Air still comes first while falling.", sy,
+        function() return ns.db.use_nifty_stopwatch end,
+        function(v)
+            if not ns.db.enabled then return end
+            ns.db.use_nifty_stopwatch = v; ns.refreshSpeedButton()
+        end)
+    UI.OnRefresh(panel, function() UI.SetEnabled(stopwatch.hcCheckbox, ns.db.enabled) end)
+    local reminders
+    reminders, sy = UI.Check(setup, "Show movement reminders", "Show ready icons for Dash and for Nifty Stopwatch if enabled above. The icons appear while running out of combat. Press your speed key to use the available action.", sy,
+        function() return ns.db.show_movement_reminders end,
+        function(v)
+            if not ns.db.enabled then return end
+            ns.db.show_movement_reminders = v; ns.refreshSpeedButton()
+        end)
+    UI.OnRefresh(panel, function() UI.SetEnabled(reminders.hcCheckbox, ns.db.enabled) end)
+    group.height = -UI.Flush(setup, sy) + 4
 
     local _, class = UnitClass("player")
     local classText = {
@@ -161,7 +177,7 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     local inspect, ig = add(1)
     local iy = 0
     _, iy = UI.Header(inspect, "Current macro", iy, "Interface\\Icons\\INV_Misc_Note_01")
-    _, iy = UI.Text(inspect, "Prepared movement action. The speed key also tracks Dash then the outdoor form. Read-only.", iy)
+    _, iy = UI.Text(inspect, "Prepared movement action. The speed key can also choose the equipped Stopwatch and track Dash then the outdoor form. Read-only.", iy)
     local macro = CreateFrame("EditBox", nil, inspect, "BackdropTemplate")
     macro:SetSize(UI.CONTENT_WIDTH - 24, 40)
     macro:SetPoint("TOPLEFT", UI.PAD + 12, iy)
@@ -177,7 +193,9 @@ HC.Settings:NewPage({ name = "Speed", description = "Choose your movement prefer
     local function macroText()
         if not ns.db.enabled then return "Speed key disabled. Enable it above to use your speed key." end
         local text = ns.getMacro()
-        return text ~= "" and text or "No speed macro yet for this class and level. Learn a supported spell or check your movement preferences."
+        if text ~= "" then return text end
+        if ns.db.use_nifty_stopwatch then return "No movement action ready. Check your movement preferences, spells and equipped gear." end
+        return "No speed macro yet for this class and level. Learn a supported spell or check your movement preferences."
     end
     local updating
     local function render()
