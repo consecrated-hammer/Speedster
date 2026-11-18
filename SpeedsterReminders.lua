@@ -1,6 +1,7 @@
 local addon, ns = ...
 
 local bar, handle, dragging, preview
+local secureBar, interruptedDrag, pendingPosition
 local slots = {}
 local ready = {}
 local entries = {
@@ -8,7 +9,7 @@ local entries = {
     { key = "dash", name = "Dash", texture = "Interface\\Icons\\Ability_Druid_Dash" },
 }
 
--- Buffsmith's informational icons and fixed top-left grip.
+-- Buffsmith's action icons and fixed top-left grip.
 local IDLE = { 0.49, 0.35, 0.13, 0.96 }
 local HOVER = { 0.78, 0.59, 0.20, 1 }
 local X = { LEFT = 0, TOPLEFT = 0, BOTTOMLEFT = 0, CENTER = 0.5, TOP = 0.5, BOTTOM = 0.5,
@@ -34,13 +35,13 @@ local function closeTooltip(self)
     if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
 end
 
-local function finishDrag()
+local function finishDrag(cancelled)
     if not dragging then return end
     dragging = nil
     bar:StopMovingOrSizing()
     if bar.SetUserPlaced then bar:SetUserPlaced(false) end
     local point, _, relative, x, y = bar:GetPoint()
-    if X[point] and X[relative] and coordinate(x) and coordinate(y) then
+    if not cancelled and X[point] and X[relative] and coordinate(x) and coordinate(y) then
         ns.db.movement_reminder_point = { relative, x - X[point] * bar:GetWidth(),
             y + (1 - Y[point]) * bar:GetHeight() }
     end
@@ -48,24 +49,47 @@ local function finishDrag()
 end
 
 local function createBar()
-    bar = CreateFrame("Frame", addon .. "MovementReminderBar", UIParent)
+    secureBar = type(RegisterStateDriver) == "function"
+    bar = CreateFrame("Frame", addon .. "MovementReminderBar", UIParent, secureBar and "SecureHandlerStateTemplate" or nil)
     bar:SetMovable(true)
     applyPosition()
     for _, entry in ipairs(entries) do
-        local slot = CreateFrame("Button", addon .. "MovementReminder" .. entry.name:gsub("%s", ""), bar)
-        if slot.SetMouseClickEnabled then slot:SetMouseClickEnabled(false) end
+        local slot = CreateFrame("Button", addon .. "MovementReminder" .. entry.name:gsub("%s", ""), bar,
+            secureBar and "SecureActionButtonTemplate" or nil)
+        if secureBar then
+            slot:RegisterForClicks("LeftButtonUp")
+            slot:SetAttribute("useOnKeyDown", false)
+            slot:SetAttribute("type1", "macro")
+            slot:SetScript("PreClick", function(self, button, down)
+                if InCombatLockdown() or button ~= "LeftButton" or down then return end
+                local macro
+                if not preview and not dragging and bar:IsShown() and self:IsShown() then
+                    macro = ns.prepareMovementReminderClick(entry.key)
+                end
+                self:SetAttribute("macrotext1", macro)
+            end)
+            slot:SetScript("PostClick", function(self)
+                if not InCombatLockdown() then self:SetAttribute("macrotext1", nil) end
+            end)
+        end
         local icon = slot:CreateTexture(nil, "ARTWORK")
         icon:SetAllPoints()
         icon:SetTexture(entry.texture)
         slot:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText(entry.name)
-            GameTooltip:AddLine(preview and "Movement reminder preview." or "Ready. Use your speed key.", 0.8, 0.8, 0.8)
+            local hint = preview and "Movement reminder preview."
+                or secureBar and ("Left-click: use " .. entry.name .. ".") or "Ready. Use your speed key."
+            GameTooltip:AddLine(hint, 0.8, 0.8, 0.8)
             GameTooltip:Show()
         end)
         slot:SetScript("OnLeave", closeTooltip)
         slot:SetScript("OnHide", closeTooltip)
         slots[entry.key] = slot
+    end
+    if secureBar then
+        bar:SetAttribute("_onstate-remindercombat", [[if newstate == "combat" then self:Hide() end]])
+        RegisterStateDriver(bar, "remindercombat", "[combat] combat; safe")
     end
 
     handle = CreateFrame("Button", addon .. "MovementReminderHandle", bar, "BackdropTemplate")
@@ -87,6 +111,7 @@ local function createBar()
         bar:StartMoving()
     end)
     handle:SetScript("OnDragStop", function()
+        if InCombatLockdown() then interruptedDrag = dragging; return end
         finishDrag()
         ns.renderMovementReminders()
     end)
@@ -122,8 +147,17 @@ function ns.renderMovementReminders(stopwatch, dash)
     if stopwatch ~= nil then ready.stopwatch, ready.dash = stopwatch, dash end
     if InCombatLockdown() then
         preview = nil
-        if bar then finishDrag(); bar:Hide() end
+        interruptedDrag = dragging
+        if bar and not secureBar then finishDrag(true); bar:Hide() end
         return
+    end
+    if interruptedDrag then
+        interruptedDrag = nil
+        finishDrag(true)
+    end
+    if pendingPosition then
+        pendingPosition = nil
+        applyPosition()
     end
     if dragging then return end
     if not bar and not (preview or ready.stopwatch or ready.dash) then return end
@@ -140,6 +174,12 @@ function ns.renderMovementReminders(stopwatch, dash)
     for _, entry in ipairs(entries) do
         local slot = slots[entry.key]
         local shown = not not (preview or ready[entry.key])
+        local clickable = secureBar and not preview
+        if slot.reminderClickable ~= clickable then
+            slot:SetHighlightTexture(clickable and "Interface\\Buttons\\ButtonHilight-Square" or "", "ADD")
+            if slot.SetMouseClickEnabled then slot:SetMouseClickEnabled(clickable) end
+            slot.reminderClickable = clickable
+        end
         if shown then
             local offset = count * (size + 6)
             local x, y = 2 + (horizontal and offset or 0), -2 - (horizontal and 0 or offset)
@@ -167,7 +207,8 @@ function ns.toggleMovementReminderPreview()
 end
 
 function ns.resetMovementReminderPosition()
-    if dragging then finishDrag() end
     ns.db.movement_reminder_point = nil
+    if bar and InCombatLockdown() then pendingPosition = true; return end
+    if dragging then finishDrag(true) end
     if bar then applyPosition() end
 end

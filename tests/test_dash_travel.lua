@@ -4,17 +4,18 @@ local wrappers, driver, secure, world, header
 local form, swimming, outdoors, shift, keyDown = 3, false, true, false, false
 local mounted = false
 local formList = { 5487, 1066, 768, 783 }
+local function parseCondition(condition)
+    if condition:find('noswimming,nomounted', 1, true) then
+        return not world.combat and not swimming and not mounted and 'yes' or 'no'
+    end
+    if condition:find('nocombat', 1, true) then return not world.combat and 'yes' or 'no' end
+    return condition:find('form:'..form, 1, true) and not swimming and outdoors and 'yes' or 'no'
+end
 local function evaluate(body, self, extra)
     local env = { self = self, control = header, button = extra and extra.button,
         down = extra and extra.down, newstate = extra and extra.newstate,
         IsShiftKeyDown = function() return shift end,
-        SecureCmdOptionParse = function(condition)
-            if condition:find('noswimming,nomounted', 1, true) then
-                return not world.combat and not swimming and not mounted and 'yes' or 'no'
-            end
-            if condition:find('nocombat', 1, true) then return not world.combat and 'yes' or 'no' end
-            return condition:find('form:'..form, 1, true) and not swimming and outdoors and 'yes' or 'no'
-        end }
+        SecureCmdOptionParse = parseCondition }
     -- This whitelist deliberately excludes cooldown APIs and GetCVarBool.
     local fn = assert(loadstring(body)); setfenv(fn, env)
     local previous = secure; secure = true
@@ -33,11 +34,16 @@ SecureHandlerWrapScript = function(button, script, owner, pre, post)
     end)
 end
 RegisterStateDriver = function(owner, state, condition)
+    if state == 'remindercombat' then
+        eq(condition, '[combat] combat; safe', 'reminder bar uses a secure combat driver')
+        return
+    end
     header = owner; driver = condition
     evaluate(owner:GetAttribute('_onstate-cat'), owner, { newstate = form == tonumber(condition:match('form:(%d+)')) and 'cat' or 'other' })
 end
 UnregisterStateDriver = function() driver = nil end
 GetCVarBool = function(name) eq(name, 'ActionButtonUseKeyDown', 'only required input CVar'); return keyDown end
+SecureCmdOptionParse = parseCondition
 GetNumShapeshiftForms = function() return #formList end
 GetShapeshiftFormInfo = function(index) return 1, false, true, formList[index] end
 wrappers = {}
@@ -138,11 +144,34 @@ local reminder = assert(_G.SpeedsterMovementReminderNiftyStopwatch)
 local dashReminder = assert(_G.SpeedsterMovementReminderDash)
 local bar = assert(_G.SpeedsterMovementReminderBar)
 local handle = assert(_G.SpeedsterMovementReminderHandle)
+local function clickReminder(button)
+    eq(button:GetAttribute('type1'), 'macro', 'left click routes through the protected action template')
+    eq(button:GetAttribute('useOnKeyDown'), false, 'reminder is an up-click')
+    button.scripts.PreClick(button, 'LeftButton', false)
+    local macro = button:GetAttribute('macrotext1')
+    button.scripts.PostClick(button)
+    eq(button:GetAttribute('macrotext1'), nil, 'no click payload is left armed')
+    return macro
+end
+for _, frame in ipairs({ bar, reminder, dashReminder }) do
+    for _, method in ipairs({ 'SetAttribute', 'SetShown', 'ClearAllPoints', 'SetPoint', 'Hide' }) do
+        local original = frame[method]
+        frame[method] = function(self, ...)
+            assert(not world.combat or secure, 'insecure reminder write in combat: '..method)
+            return original(self, ...)
+        end
+    end
+end
 assert(reminder:IsShown(), 'ready Stopwatch shows while moving')
 assert(dashReminder:IsShown(), 'ready Cat Dash shows in the same bar')
 eq(reminder:GetWidth(), 40, 'Buffsmith default icon size')
 local _, _, _, _, dashY = dashReminder:GetPoint()
 eq(dashY, -48, 'second icon has the Buffsmith vertical spacing')
+eq(clickReminder(reminder), '/use [nocombat,noswimming,nomounted] item:2820', 'Stopwatch tile uses its fixed item ID')
+eq(header:GetAttribute('dash-spent'), false, 'item click leaves Dash available')
+eq(clickReminder(dashReminder), '/cast [nocombat,noswimming,nomounted] Spell 1850', 'Dash tile uses Dash even with Stopwatch present')
+eq(header:GetAttribute('dash-spent'), true, 'Dash click advances the same action sequence')
+setForm(4); setForm(3); tick()
 handle.scripts.OnDragStart()
 bar:ClearAllPoints()
 bar:SetPoint('TOPLEFT', UIParent, 'CENTER', 130, 75)
@@ -153,13 +182,19 @@ assert(not bar:IsShown(), 'dropping restores normal readiness visibility')
 eq(ns.db.movement_reminder_point[2], 130, 'drag saves bar position')
 ns.toggleMovementReminderPreview()
 assert(bar:IsShown() and handle:IsShown(), 'preview shows the bar and grip while stationary')
+speed = 7
+eq(clickReminder(reminder), nil, 'preview cannot use a ready item')
+eq(clickReminder(dashReminder), nil, 'preview cannot cast a ready ability')
+speed = 0
 local _, _, _, barX = bar:GetPoint()
 eq(barX, 130, 'preview uses the same saved anchor')
 ns.resetMovementReminderPosition()
 eq(ns.db.movement_reminder_point, nil, 're-centre clears only the reminder anchor')
 world.combat = true
 ns.core.scripts.OnEvent(ns.core, 'PLAYER_REGEN_DISABLED')
+evaluate(bar:GetAttribute('_onstate-remindercombat'), bar, { newstate = 'combat' })
 assert(not bar:IsShown(), 'combat hides even the stationary preview')
+eq(clickReminder(reminder), nil, 'combat cannot arm the macro')
 world.combat = false
 ns.core.scripts.OnEvent(ns.core, 'PLAYER_REGEN_ENABLED')
 assert(not bar:IsShown(), 'preview stays closed when combat ends')
@@ -173,10 +208,15 @@ assert(dashReminder:IsShown(), 'Dash cooldown expiry while moving restores the r
 speed = 0; tick()
 assert(not reminder:IsShown(), 'standing hides Stopwatch reminder')
 speed = 7
-itemDuration = 360; tick()
+itemDuration = 360
+eq(clickReminder(reminder), nil, 'click checks cooldown again between refreshes')
+tick()
 assert(not reminder:IsShown(), 'item cooldown hides the ready reminder')
 itemDuration = 0; tick()
 assert(reminder:IsShown(), 'cooldown expiration shows the reminder without restarting movement')
+speed = 0
+eq(clickReminder(reminder), '/use [nocombat,noswimming,nomounted] item:2820', 'stopping briefly to click still uses a visible ready icon')
+speed = 7
 local itemMacro = press(primary)
 assert(itemMacro:find('/use [nocombat,noswimming,nomounted] item:2820', 1, true))
 eq(header:GetAttribute('dash-spent'), false, 'Stopwatch preserves the next Dash press')
@@ -247,4 +287,5 @@ assert(rogueMacro:find('item:2820', 1, true) and rogueMacro:find('/cast Spell 29
     'non-druid keeps Sprint as fallback when using legacy item cooldown API')
 GetInventoryItemID, GetItemCooldown = nil, nil
 SecureHandlerWrapScript, RegisterStateDriver, UnregisterStateDriver, GetCVarBool = nil, nil, nil, nil
+SecureCmdOptionParse = nil
 io.write('test_dash_travel: ok\n')

@@ -287,20 +287,42 @@ local function dashReminderReady()
 	return dashReady(true)
 end
 
-local function refreshMovementReminders()
-	if not db then return end
-	local canShow = db.enabled and db.show_movement_reminders and not onFlight and not InCombatLockdown()
+local function movementRemindersAllowed()
+	return db and db.enabled and db.show_movement_reminders and not onFlight and not InCombatLockdown()
+		and not (IsMounted and IsMounted()) and not (IsSwimming and IsSwimming())
+		and not (IsFalling and IsFalling()) and not (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
+end
+
+local function movementReminderAvailability()
+	if not movementRemindersAllowed() then return false, false end
 	local moving
-	if canShow and IsPlayerMoving then
+	if IsPlayerMoving then
 		moving = IsPlayerMoving()
 		moving = not (issecretvalue and issecretvalue(moving)) and moving == true
-	elseif canShow and GetUnitSpeed then
+	elseif GetUnitSpeed then
 		local speed = GetUnitSpeed("player")
 		moving = type(speed) == "number" and not (issecretvalue and issecretvalue(speed)) and speed > 0
 	end
-	local show = moving and not (IsMounted and IsMounted()) and not (IsSwimming and IsSwimming())
-		and not (IsFalling and IsFalling()) and not (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
-	ns.renderMovementReminders(not not (show and stopwatchReady()), not not (show and dashReminderReady()))
+	return not not (moving and stopwatchReady()), not not (moving and dashReminderReady())
+end
+
+function ns.prepareMovementReminderClick(key)
+	if not movementRemindersAllowed() then return end
+	if key == "stopwatch" and stopwatchReady() then return STOPWATCH_MACRO end
+	if key ~= "dash" or not dashReminderReady() then return end
+
+	local name = getSpellNameIfKnown(1850)
+	if not name then return end
+	if movementBank and movementBank:GetAttribute("dash-enabled")
+		and SecureCmdOptionParse(movementBank:GetAttribute("cat-condition")) == "yes" then
+		movementBank:SetAttribute("dash-spent", true)
+	end
+	return "/cast [nocombat,noswimming,nomounted] "..name
+end
+
+local function refreshMovementReminders()
+	if not db then return end
+	ns.renderMovementReminders(movementReminderAvailability())
 end
 
 local function updateMovementReminders()
