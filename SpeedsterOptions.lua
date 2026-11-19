@@ -112,41 +112,64 @@ local function buildSpeed(panel, y)
     local cy = 0
     _, cy = UI.Header(preferences, "Class movement", cy, spellIcon(({ DRUID = 783, SHAMAN = 2645, HUNTER = 5118, ROGUE = 2983, MAGE = 1953 })[class]))
     _, cy = UI.Text(preferences, classText[class] or "Speedster has no speed spell for this class. Any extra keys on Key Bindings still work.", cy)
+    local formY, formRow, note, dashRow = cy
+    local formHeight, noteHeight, dashHeight, formKnown, formKey
     if class == "DRUID" or class == "SHAMAN" then
-        local key = class == "DRUID" and "druid_use_travel" or "shaman_use_ghost_wolf"
-        local function known()
+        formKey = class == "DRUID" and "druid_use_travel" or "shaman_use_ghost_wolf"
+        formKnown = function()
             if class == "SHAMAN" then return ns.isSpellKnownSafe(2645) end
             return ns.isSpellKnownSafe(783) or ns.isSpellKnownSafe(33943) or ns.isSpellKnownSafe(40120)
         end
-        local row
-        row, cy = UI.Check(preferences, class == "DRUID" and "Use Travel Form outdoors" or "Use Ghost Wolf",
+        formRow, cy = UI.Check(preferences, class == "DRUID" and "Use Travel Form outdoors" or "Use Ghost Wolf",
             class == "DRUID" and "Use Travel Form outdoors and Flight Form where allowed. Turn off to keep Aquatic Form in water and Cat Form elsewhere. Requires learned forms."
                 or "Use learned Ghost Wolf on your speed key. Water Walking remains a separate utility action.", cy,
-            function() return ns.db[key] end,
+            function() return ns.db[formKey] end,
             function(v)
-                if not ns.db.enabled or (not known() and not ns.db[key]) then return end
-                ns.db[key] = v; ns.refreshSpeedButton()
+                if not ns.db.enabled or (not formKnown() and not ns.db[formKey]) then return end
+                ns.db[formKey] = v; ns.refreshSpeedButton()
             end)
-        UI.OnRefresh(panel, function()
-            row:SetShown(known() or ns.db[key])
-            UI.SetEnabled(row.hcCheckbox, ns.db.enabled and (known() or ns.db[key]))
-        end)
         cy = UI.Flush(preferences, cy)
-        local note
+        formHeight = formY - cy
+        local noteY = cy
         note, cy = UI.Text(preferences, "Not learned yet. Learn the form to enable it here.", cy)
-        UI.OnRefresh(panel, function() note:SetShown(not known()) end)
+        noteHeight = noteY - cy
     end
     if class == "DRUID" then
-        local dashRow
+        local dashY = cy
         dashRow, cy = UI.Check(preferences, "Use Dash in Cat Form", "Requires learned Cat Form and Dash. Outdoors with Travel Form enabled: attempt Dash once, then use the outdoor form on subsequent presses until you leave Cat. Outside combat, Dash on cooldown is skipped immediately. In combat, the next press advances even if Dash failed. Swimming and falling priorities remain.", cy,
             function() return ns.db.druid_dash_in_cat end,
             function(v)
                 if not ns.db.enabled then return end
                 ns.db.druid_dash_in_cat = v; ns.refreshSpeedButton()
             end)
-        UI.OnRefresh(panel, function() UI.SetEnabled(dashRow.hcCheckbox, ns.db.enabled) end)
+        cy = UI.Flush(preferences, cy)
+        dashHeight = dashY - cy
     end
-    cg.height = -UI.Flush(preferences, cy) + 4
+    cg.height = -cy + 4
+    if formRow then
+        UI.OnRefresh(panel, function()
+            local learned = formKnown()
+            local showForm = learned or ns.db[formKey]
+            formRow:SetShown(showForm)
+            UI.SetEnabled(formRow.hcCheckbox, ns.db.enabled and showForm)
+            note:SetShown(not learned)
+
+            local y = formY
+            if showForm then y = y - formHeight end
+            if not learned then
+                note:ClearAllPoints()
+                note:SetPoint("TOPLEFT", UI.PAD + 2, y - 4)
+                y = y - noteHeight
+            end
+            if dashRow then
+                dashRow:ClearAllPoints()
+                dashRow:SetPoint("TOPLEFT", UI.PAD, y)
+                UI.SetEnabled(dashRow.hcCheckbox, ns.db.enabled)
+                y = y - dashHeight
+            end
+            cg.height = -y + 4
+        end)
+    end
 
     local function racialAvailable() return ns.isSpellKnownSafe(1259416) or ns.db.walk_on_air_while_falling end
     local racial, rg = add(1, nil, function() return racialAvailable() and ns.db.enabled end)
